@@ -1,11 +1,251 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>My Homepage</title>
+  <meta charset="UTF-8" />
+  <title>Haitao Hu - Personal Homepage</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Personal homepage of Haitao Hu" />
+
+  <style>
+    /* ===== 基本样式 ===== */
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.6;
+      color: #222;
+      background-color: #f5f5f5;
+    }
+
+    a {
+      color: #0077cc;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+
+    /* ===== 顶部导航栏 ===== */
+    header {
+      background: #111827;
+      color: #f9fafb;
+      padding: 16px 24px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .nav-container {
+      max-width: 900px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .site-title {
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    nav a {
+      margin-left: 16px;
+      font-size: 14px;
+    }
+
+    /* ===== 主体内容 ===== */
+    main {
+      max-width: 900px;
+      margin: 24px auto 40px auto;
+      padding: 0 16px;
+    }
+
+    section {
+      background: #ffffff;
+      border-radius: 8px;
+      padding: 20px 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+    }
+
+    h1, h2 {
+      margin-top: 0;
+    }
+
+    h1 {
+      font-size: 28px;
+      margin-bottom: 4px;
+    }
+
+    .subtitle {
+      color: #4b5563;
+      font-size: 15px;
+    }
+
+    h2 {
+      font-size: 20px;
+      margin-bottom: 8px;
+      border-left: 4px solid #2563eb;
+      padding-left: 8px;
+    }
+
+    ul {
+      padding-left: 20px;
+      margin-top: 4px;
+    }
+
+    .tag-list span {
+      display: inline-block;
+      background: #e5e7eb;
+      border-radius: 999px;
+      padding: 2px 10px;
+      font-size: 12px;
+      margin: 2px 4px 2px 0;
+    }
+
+    .two-column {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 24px;
+    }
+
+    .col {
+      flex: 1 1 260px;
+    }
+
+    .contact-list div {
+      margin-bottom: 4px;
+    }
+
+    footer {
+      text-align: center;
+      color: #6b7280;
+      font-size: 12px;
+      margin-bottom: 20px;
+    }
+
+    @media (max-width: 600px) {
+      header {
+        padding: 12px 16px;
+      }
+      .site-title {
+        font-size: 18px;
+      }
+      main {
+        margin-top: 16px;
+      }
+    }
+  </style>
 </head>
+
 <body>
-    <h1>Hello! This is my homepage.</h1>
-    <p>Welcome to my GitHub Pages site.</p>
+  <!-- 顶部导航 -->
+  <header>
+    <div class="nav-container">
+      <div class="site-title">Haitao Hu</div>
+      <nav>
+        <a href="#about">About</a>
+        <a href="#research">Research</a>
+        <a href="#publications">Publications</a>
+        <a href="#teaching">Teaching</a>
+        <a href="#contact">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- 个人简介 -->
+    <section id="about">
+      <h1>Haitao Hu</h1>
+      <p class="subtitle">
+        Graduate student · Condensed matter / computational physics · VASP / DFT / 2D materials
+      </p>
+      <p>
+        (这里写一段简短的自我介绍，可以用 2–3 句话。比如：)<br>
+        I am a graduate student interested in electronic and topological properties of
+        low-dimensional materials, especially graphene and related nanostructures.
+        I mainly use density functional theory (DFT) and tight-binding models in my research.
+      </p>
+      <div class="tag-list">
+        <span>DFT</span>
+        <span>VASP</span>
+        <span>Phonopy</span>
+        <span>Graphene</span>
+        <span>Topological phases</span>
+      </div>
+    </section>
+
+    <!-- 研究兴趣 & 当前工作 -->
+    <section id="research">
+      <h2>Research Interests</h2>
+      <div class="two-column">
+        <div class="col">
+          <ul>
+            <li>Electronic structure and band topology of 2D materials</li>
+            <li>Bilayer graphene nanoribbons and edge states</li>
+            <li>Phonon spectra and lattice dynamics (VASP + Phonopy)</li>
+            <li>Strain engineering and interlayer sliding in van der Waals systems</li>
+          </ul>
+        </div>
+        <div class="col">
+          <h3 style="font-size: 15px; margin-bottom: 4px;">Current projects</h3>
+          <ul>
+            <li>Hidden symmetry and topological phase transitions in bilayer honeycomb lattices</li>
+            <li>First-principles study of 2D (anti)ferroelectric materials</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 论文 / 预印本 -->
+    <section id="publications">
+      <h2>Publications & Preprints</h2>
+      <p>(示例，等你有正式论文了可以改成真实的条目。)</p>
+      <ol>
+        <li>
+          <strong>Title of your first paper</strong><br>
+          Your Name, Coauthor Name, <em>Journal Name</em> <strong>Volume</strong>, Page (Year).<br>
+          <a href="#">Link / arXiv</a>
+        </li>
+        <li>
+          <strong>Another work in preparation</strong><br>
+          Short description of the project, e.g. “First-principles investigation of
+          ferroelectric-like behavior in layered graphene systems”.
+        </li>
+      </ol>
+    </section>
+
+    <!-- 教学 / 经历 -->
+    <section id="teaching">
+      <h2>Teaching & Experience</h2>
+      <ul>
+        <li>Teaching assistant, General Physics, University XXXX, 2023–2024.</li>
+        <li>Experience with Linux clusters, Slurm, and high-performance computing.</li>
+        <li>Daily user of VASP, Phonopy, Wannier90, and MATLAB / Python.</li>
+      </ul>
+    </section>
+
+    <!-- 联系方式 -->
+    <section id="contact">
+      <h2>Contact</h2>
+      <div class="contact-list">
+        <div>Email: <a href="mailto:your_email@university.edu">your_email@university.edu</a></div>
+        <div>GitHub: <a href="https://github.com/haitaohu55" target="_blank">github.com/haitaohu55</a></div>
+        <!-- 如果你以后有这些就把 # 换成真实链接 -->
+        <div>Google Scholar: <a href="#" target="_blank">link</a></div>
+        <div>ORCID: <a href="#" target="_blank">link</a></div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    © <span id="year"></span> Haitao Hu · Powered by GitHub Pages
+  </footer>
+
+  <script>
+    // 自动更新年份
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
 </body>
 </html>
