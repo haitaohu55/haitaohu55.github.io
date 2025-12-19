@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Haitao Hu - Personal Homepage</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Personal homepage of Haitao Hu" />
+
+  <style>
+    /* ===== 基本样式 ===== */
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.6;
+      color: #222;
+      background-color: #f5f5f5;
+    }
+
+    a {
+      color: #0077cc;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+
+    /* ===== 顶部导航栏 ===== */
+    header {
+      background: #111827;
+      color: #f9fafb;
+      padding: 16px 24px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .nav-container {
+      max-width: 900px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .site-title {
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    nav a {
+      margin-left: 16px;
+      font-size: 14px;
+    }
+
+    /* ===== 主体内容 ===== */
+    main {
+      max-width: 900px;
+      margin: 24px auto 40px auto;
+      padding: 0 16px;
+    }
+
+    section {
+      background: #ffffff;
+      border-radius: 8px;
+      padding: 20px 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+    }
+
+    h1, h2 {
+      margin-top: 0;
+    }
+
+    h1 {
+      font-size: 28px;
+      margin-bottom: 4px;
+    }
+
+    .subtitle {
+      color: #4b5563;
+      font-size: 15px;
+    }
+
+    h2 {
+      font-size: 20px;
+      margin-bottom: 8px;
+      border-left: 4px solid #2563eb;
+      padding-left: 8px;
+    }
+
+    ul {
+      padding-left: 20px;
+      margin-top: 4px;
+    }
+
+    .tag-list span {
+      display: inline-block;
+      background: #e5e7eb;
+      border-radius: 999px;
+      padding: 2px 10px;
+      font-size: 12px;
+      margin: 2px 4px 2px 0;
+    }
+
+    .two-column {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 24px;
+    }
+
+    .col {
+      flex: 1 1 260px;
+    }
+
+    .contact-list div {
+      margin-bottom: 4px;
+    }
+
+    footer {
+      text-align: center;
+      color: #6b7280;
+      font-size: 12px;
+      margin-bottom: 20px;
+    }
+
+    @media (max-width: 600px) {
+      header {
+        padding: 12px 16px;
+      }
+      .site-title {
+        font-size: 18px;
+      }
+      main {
+        margin-top: 16px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- 顶部导航 -->
+  <header>
+    <div class="nav-container">
+      <div class="site-title">Haitao Hu</div>
+      <nav>
+        <a href="#about">About</a>
+        <a href="#research">Research</a>
+        <a href="#publications">Publications</a>
+        <a href="#contact">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- 个人简介 -->
+    <section id="about">
+      <h1>Haitao Hu</h1>
+      <p class="subtitle">
+        Condensed matter physics / DFT / TB model / 2D materials
+      </p>
+      <p>
+        I am a phd student interested in theoretical and computational condensed physics, for example Anderson localization, 
+        topological insulators, and low-dimensional materials.
+        I mainly use density functional theory and tight-binding models in my research.
+      </p>
+      <div class="tag-list">
+        <span>Anderson localization</span>
+        <span>Topological phases</span>
+        <span>2D material</span>
+        <span>DFT</span>
+      </div>
+    </section>
+
+    <!-- 笔记 -->
+    <section id="notes">
+      <h2>Notes</h2>
+      <p class="subtitle">
+        Click below to see the list of my notes.
+      </p>
+      <ul>
+        <li>
+          <a href="notes/dft/index.html">
+            Notes on DFT calculations
+          </a>
+        </li>
+        <li>
+          <a href="notes/tb/index.html">
+            Notes on tight-binding calculations
+          </a>
+        </li>
+        <li>
+          <a href="notes/quasiperiodic/index.html">
+            Notes on quasiperiodic systems
+          </a>
+        </li>
+      </ul>
+    </section>
+
+    <!-- 研究兴趣 & 当前工作 -->
+    <section id="research">
+      <h2>Research Interests</h2>
+      <div class="two-column">
+        <div class="col">
+          <ul>
+            <li>Anderson localization in quasiperiodic systems</li>
+            <li>Electronic structure and band topology of 2D materials</li>
+          </ul>
+        </div>
+        <div class="col">
+          <h3 style="font-size: 15px; margin-bottom: 4px;">Current projects</h2>
+          <ul>
+            <li>Hidden symmetry and topological phase transitions in 2D materials</li>
+            <li>First-principles study of 2D (anti)ferroelectric materials</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 论文 / 预印本 -->
+    <section id="publications">
+      <h2>Publications</h2>
+      <ol>
+        <li>
+          <strong>
+            <a href="https://journals.aps.org/prl/abstract/10.1103/rl1f-ptzq" target="_blank">
+              Hidden Self Duality and Exact Mobility Edges in Quasiperiodic Network Models
+            </a>
+          </strong><br>
+          Hai-Tao Hu, et al., <em>Phys. Rev. Lett.</em> <strong>134</strong>, 246301 (2025).<br>
+        </li>
+        <li>
+          <strong>
+            <a href="https://journals.aps.org/prb/abstract/10.1103/2rfb-j778" target="_blank">
+              Exact mobility edges in quasiperiodic network models with slowly varying potentials
+            </a>
+          </strong><br>
+          Hai-Tao Hu, et al., <em>Phys. Rev. B</em> <strong>112</strong>, 054201 (2025).<br>
+        </li>
+        <li>
+          <strong>
+            <a href="https://journals.aps.org/prb/abstract/10.1103/pk8h-xlld" target="_blank">
+              Divergent density of states and nonanalytic Lyapunov exponent in one-dimensional slowly varying systems
+            </a>
+          </strong><br>
+          Hai-Tao Hu, et al., <em>Phys. Rev. B</em> <strong>112</strong>, 245134 (2025).<br>
+        </li>
+      </ol>
+    </section>
+
+    <!-- 联系方式 -->
+    <section id="contact">
+      <h2>Contact</h2>
+      <div class="contact-list">
+        <div>Email: <a href="mailto:haitaohu@mail.ustc.edu.cn">haitaohu@mail.ustc.edu.cn</a></div>
+        <div><a href="https://scholar.google.com.hk/citations?hl=zh-CN&user=51eUsJkAAAAJ" target="_blank">Google Scholar</a></div>
+        <div><a href="https://orcid.org/my-orcid?orcid=0009-0001-7599-1393" target="_blank">ORCID</a></div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    © <span id="year"></span> Haitao Hu
+  </footer>
+
+  <script>
+    // 自动更新年份
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
