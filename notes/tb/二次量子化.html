@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Structure Optimization with VASP – Haitao Hu</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Notes on structure optimization using VASP" />
+
+  <!-- highlight.js 样式（主题可以换，这里用 github 风格） -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+
+  <!-- highlight.js 主脚本 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <!-- 语言包：matlab（如果还要别的语言就再多引入几个） -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/matlab.min.js"></script>
+
+  <!-- MathJax 配置 + 引入 -->
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']]
+      }
+    };
+  </script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+  </script>
+
+  <!-- 你可以直接把主页 index.html 里的 <style> 整段复制过来，
+       这里我只放最核心的一些，保证能看 -->
+  <style>
+    /* ===== 基本样式 ===== */
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.6;
+      color: #222;
+      background-color: #f5f5f5;
+    }
+
+    a {
+      color: #0077cc;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    /* ===== 顶部导航栏 ===== */
+    header {
+      background: #111827;
+      color: #f9fafb;
+      padding: 16px 24px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .nav-container {
+      max-width: 900px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .site-title {
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    nav a {
+      margin-left: 16px;
+      font-size: 14px;
+    }
+
+    /* ===== 主体内容 ===== */
+    main {
+      max-width: 900px;
+      margin: 24px auto 40px auto;
+      padding: 0 16px;
+    }
+
+    section {
+      background: #ffffff;
+      border-radius: 8px;
+      padding: 20px 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+    }
+
+    h1,
+    h2 {
+      margin-top: 0;
+    }
+
+    h1 {
+      font-size: 28px;
+      margin-bottom: 4px;
+    }
+
+    .subtitle {
+      color: #4b5563;
+      font-size: 15px;
+    }
+
+    h2 {
+      font-size: 20px;
+      margin-bottom: 8px;
+      border-left: 4px solid #2563eb;
+      padding-left: 8px;
+    }
+
+    ul {
+      padding-left: 20px;
+      margin-top: 4px;
+    }
+
+    .tag-list span {
+      display: inline-block;
+      background: #e5e7eb;
+      border-radius: 999px;
+      padding: 2px 10px;
+      font-size: 12px;
+      margin: 2px 4px 2px 0;
+    }
+
+    .two-column {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 24px;
+    }
+
+    .col {
+      flex: 1 1 260px;
+    }
+
+    .contact-list div {
+      margin-bottom: 4px;
+    }
+
+    footer {
+      text-align: center;
+      color: #6b7280;
+      font-size: 12px;
+      margin-bottom: 20px;
+    }
+
+    @media (max-width: 600px) {
+      header {
+        padding: 12px 16px;
+      }
+
+      .site-title {
+        font-size: 18px;
+      }
+
+      main {
+        margin-top: 16px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- 顶部导航 -->
+  <header>
+    <div class="nav-container">
+      <div class="site-title">Haitao Hu</div>
+      <div class="breadcrumbs">
+        <a href="/index.html">Home</a> ·
+        <a href="/notes/tb/index.html">notes on Tight-binding models</a> ·
+        <span>二次量子化</span>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <article class="note-card">
+      <h1>二次量子化</h1>
+      <div class="note-meta">
+        Last updated:
+        <time id="last-updated"></time>
+      </div>
+
+      <!-- 自动生成目录 -->
+      <div class="toc">
+        <div class="toc-title">Contents</div>
+        <ul id="toc-list"></ul>
+      </div>
+
+      <!-- 正文部分，可随意替换 -->
+      <h2 id="basic-idea">1. 有限差分法离散化哈密顿量</h2>
+      <p>
+        先给出势场 $U(x)$ 下的薛定谔方程
+        \begin{align}
+        E \psi = [- \frac{\hbar^2}{2m} \nabla^2 + U(x)] \psi, \label{eq1}
+        \end{align}
+        如果考虑的为一维链，则上式化为
+        \begin{align}
+        E \psi(x) = [- \frac{\hbar^2}{2m} \frac{\partial^2}{\partial x^2} + U(x)] \psi(x), \label{eq2}
+        \end{align}
+        进而我们可以将一维链离散化为间距为a的格点。利用
+        \begin{align}
+        \frac{\partial}{\partial x} \psi(x) = \frac{\psi(x+a) - \psi(x)}{a}, \label{eq3}
+        \end{align}
+        以及
+        \begin{align}
+        \frac{\partial^2}{\partial x^2} \psi(x) = [\frac{\psi(x+a) - \psi(x)}{a} & - \frac{\psi(x) - \psi(x-a)}{a}]/a =
+        \frac{\psi(x+a) - 2\psi(x) + \psi(x-a)}{a^2},
+        \end{align}
+        可以将$\nabla^2$表示为差分的形式，则有
+        \begin{align}
+        E \psi(x) = - \frac{\hbar^2[\psi(x+a) + \psi(x-a) -2\psi(x)]}{2ma^2} + U(x) \psi(x). \label{eq4}
+        \end{align}
+        接下去我们记离散化后的格点$x = ja$，则$\psi(x) = \psi_j$，进而上式化为
+        \begin{align}
+        E \psi_j = - \frac{\hbar^2[\psi_{j+1} + \psi_{j-1} -2\psi_j]}{2ma^2} + U_j \psi_j. \label{eq5}
+        \end{align}
+        将$\dfrac{-\hbar^2}{2ma^2}$记作$t$，则有
+        \begin{align}
+        E \psi_j = t [\psi_{j+1} + \psi_{j-1} -2\psi_j] + U_j \psi_j, \label{eq6}
+        \end{align}
+        至此我们成功将哈密顿量离散化了，其矩阵形式如下
+        \begin{equation}
+        E
+        \begin{pmatrix}
+        \psi_1 \\
+        \psi_2 \\
+        \psi_3\\
+        \vdots \\
+        \psi_N
+        \end{pmatrix}
+        =
+        \begin{pmatrix}
+        U_1 & 0 & 0 & \cdots & 0 \\
+        0 & U_2 & 0 & \cdots & 0 \\
+        0 & 0 & U_3 & \cdots & 0 \\
+        \vdots & \vdots & \vdots & \ddots & \vdots \\
+        0 & 0 & 0 & \cdots & U_N
+        \end{pmatrix}
+        \begin{pmatrix}
+        \psi_1 \\
+        \psi_2 \\
+        \psi_3\\
+        \vdots \\
+        \psi_N
+        \end{pmatrix}
+        +
+        t
+        \begin{pmatrix}
+        -2 & 1 & 0 & \cdots & 0 \\
+        1 & -2 & 1 & \cdots & 0 \\
+        0 & 1 & -2 & \cdots & 0 \\
+        \vdots & \vdots & \vdots & \ddots & \vdots \\
+        0 & 0 & 0 & \cdots & -2
+        \end{pmatrix}
+        \begin{pmatrix}
+        \psi_1 \\
+        \psi_2 \\
+        \psi_3\\
+        \vdots \\
+        \psi_N
+        \end{pmatrix}
+        \label{eq15}
+        \end{equation}
+        大多数文献中，紧束缚哈密顿量形式往往如下
+        \begin{align}
+        \mathcal{H} = \sum_{n} U_n c_n^{\dagger} c_n +\sum_{\braket{n,m}}t c_n^{\dagger} c_m
+        \end{align}
+        这是因为我们可以通过调费米面去掉在位能项$-2t$。此外，由于$t$的定义为$\dfrac{-\hbar^2}{2ma^2}$，有的文献会倾向于令其为-1而非1。
+
+
+    </article>
+  </main>
+
+  <footer>
+    © <span id="year"></span> Haitao Hu
+  </footer>
+
+  <script>
+    // 自动更新年份
+    const yearElem = document.getElementById('year');
+    if (yearElem) {
+      yearElem.textContent = new Date().getFullYear();
+    }
+
+    // 自动更新最后修改时间
+    const lastUpdatedElem = document.getElementById("last-updated");
+    if (lastUpdatedElem) {
+      const t = new Date(document.lastModified);
+      const pad = n => String(n).padStart(2, "0");
+      const formatted = `${t.getFullYear()}-${pad(t.getMonth() + 1)}-${pad(t.getDate())}`;
+      lastUpdatedElem.textContent = formatted;
+    }
+
+    // 自动生成目录
+    const tocList = document.getElementById("toc-list");
+    if (tocList) {
+      const headings = document.querySelectorAll("h2");
+
+      headings.forEach((h, i) => {
+        // 没写 id 的话自动补一个
+        if (!h.id) {
+          h.id = "section-" + (i + 1);
+        }
+
+        const li = document.createElement("li");
+        const a = document.createElement("a");
+        a.href = "#" + h.id;
+        a.textContent = h.textContent;
+        li.appendChild(a);
+        tocList.appendChild(li);
+      });
+    }
+    // 自动高亮所有 <pre><code>...</code></pre>
+    hljs.highlightAll();
+  </script>
+
+</body>
+
+</html>

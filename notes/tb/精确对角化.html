@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Structure Optimization with VASP – Haitao Hu</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Notes on structure optimization using VASP" />
+
+    <!-- highlight.js 样式（主题可以换，这里用 github 风格） -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+
+    <!-- highlight.js 主脚本 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <!-- 语言包：matlab（如果还要别的语言就再多引入几个） -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/matlab.min.js"></script>
+
+    <!-- MathJax 配置 + 引入 -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']]
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+    </script>
+
+    <!-- 你可以直接把主页 index.html 里的 <style> 整段复制过来，
+       这里我只放最核心的一些，保证能看 -->
+    <style>
+        /* ===== 基本样式 ===== */
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            line-height: 1.6;
+            color: #222;
+            background-color: #f5f5f5;
+        }
+
+        a {
+            color: #0077cc;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        /* ===== 顶部导航栏 ===== */
+        header {
+            background: #111827;
+            color: #f9fafb;
+            padding: 16px 24px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .nav-container {
+            max-width: 900px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .site-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        nav a {
+            margin-left: 16px;
+            font-size: 14px;
+        }
+
+        /* ===== 主体内容 ===== */
+        main {
+            max-width: 900px;
+            margin: 24px auto 40px auto;
+            padding: 0 16px;
+        }
+
+        section {
+            background: #ffffff;
+            border-radius: 8px;
+            padding: 20px 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+        }
+
+        h1,
+        h2 {
+            margin-top: 0;
+        }
+
+        h1 {
+            font-size: 28px;
+            margin-bottom: 4px;
+        }
+
+        .subtitle {
+            color: #4b5563;
+            font-size: 15px;
+        }
+
+        h2 {
+            font-size: 20px;
+            margin-bottom: 8px;
+            border-left: 4px solid #2563eb;
+            padding-left: 8px;
+        }
+
+        ul {
+            padding-left: 20px;
+            margin-top: 4px;
+        }
+
+        .tag-list span {
+            display: inline-block;
+            background: #e5e7eb;
+            border-radius: 999px;
+            padding: 2px 10px;
+            font-size: 12px;
+            margin: 2px 4px 2px 0;
+        }
+
+        .two-column {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 24px;
+        }
+
+        .col {
+            flex: 1 1 260px;
+        }
+
+        .contact-list div {
+            margin-bottom: 4px;
+        }
+
+        footer {
+            text-align: center;
+            color: #6b7280;
+            font-size: 12px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 600px) {
+            header {
+                padding: 12px 16px;
+            }
+
+            .site-title {
+                font-size: 18px;
+            }
+
+            main {
+                margin-top: 16px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 顶部导航 -->
+    <header>
+        <div class="nav-container">
+            <div class="site-title">Haitao Hu</div>
+            <div class="breadcrumbs">
+                <a href="/index.html">Home</a> ·
+                <a href="/notes/tb/index.html">notes on Tight-binding models</a> ·
+                <span>精确对角化</span>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <article class="note-card">
+            <h1>精确对角化</h1>
+            <div class="note-meta">
+                Last updated:
+                <time id="last-updated"></time>
+            </div>
+
+            <!-- 自动生成目录 -->
+            <div class="toc">
+                <div class="toc-title">Contents</div>
+                <ul id="toc-list"></ul>
+            </div>
+
+            <!-- 正文部分，可随意替换 -->
+            <h2 id="basic-idea">1. 精确对角化</h2>
+            <p>
+                我们从定态方程入手
+                \begin{align}
+                H \ket{\psi} = E \ket{\psi}
+                , \label{eq1}
+                \end{align}
+                其波函数$\ket{\psi}$可用某一组正交归一基展开
+                \begin{align}
+                \ket{\psi} = \sum_n C_n \ket{n}, \braket{n | m} = \delta_{nm}
+                . \label{eq2}
+                \end{align}
+                于是我们可以得到
+                \begin{align}
+                H & \ket{\psi} \nonumber \\
+                & \downarrow \nonumber \\
+                H \sum_n & C_n \ket{n} \nonumber \\
+                & \downarrow \nonumber \\
+                \sum_n C_n E \ket{n} & = \sum_n C_n H \ket{n} \nonumber \\
+                & \downarrow \nonumber \\
+                \sum_{n} C_n E \braket{m | n} & = \sum_{n} C_n \bra{m} H \ket{n} \nonumber \\
+                & \downarrow \nonumber \\
+                E C_m & = \sum_{n} H_{mn} C_n \nonumber \\
+                \label{eq3}
+                \end{align}
+                写得更形象一点，我们现在就得到了这样的一个式子
+                \begin{equation}
+                \begin{pmatrix}
+                H_{1,1} & H_{1,2} & \cdots & H_{1,N} \\
+                H_{2,1} & H_{2,2} & \cdots & H_{2,N}\\
+                \vdots & \vdots & & \vdots \\
+                H_{N,1} & H_{N,2} & \cdots & H_{N,N}
+                \end{pmatrix}
+                \begin{pmatrix}
+                C_1 \\
+                C_2 \\
+                \vdots \\
+                C_N
+                \end{pmatrix}
+                =
+                E
+                \begin{pmatrix}
+                C_1 \\
+                C_2 \\
+                \vdots \\
+                C_N
+                \end{pmatrix}
+                \label{eq4}
+                \end{equation}
+                对角化哈密顿量矩阵$H$即可得到其本征能。这里的$H_{m,n}$不再是算符，而是做完投影的矩阵元。
+            <h2 id="basic-idea">2. 粒子数表象</h2>
+            <p>
+                考虑一维谐振子哈密顿量
+                \begin{align}
+                H = \frac{p^2}{2m} + \frac{1}{2}m \omega^2 x^2
+                , \label{eq5}
+                \end{align}
+                引入产生湮灭算符(本质是要把它凑成$a^{\dagger}a + \frac{1}{2}$)
+                \begin{align}
+                a & = \sqrt{\frac{m \omega}{2 \hbar}} x + \frac{1}{\sqrt{2 m \hbar \omega}} ip \nonumber \\
+                a^{\dagger} & = \sqrt{\frac{m \omega}{2 \hbar}} x - \frac{1}{\sqrt{2 m \hbar \omega}} ip \nonumber \\
+                \label{eq6}
+                \end{align}
+                哈密顿量就整理为
+                \begin{align}
+                H =\hbar \omega (a^{\dagger}a + \frac{1}{2})
+                . \label{eq7}
+                \end{align}
+                其中 $a^{\dagger}a$ 就是我粒子数算符 $\hat{n}$。
+
+            <h2 id="basic-idea">3. 费米一维链</h2>
+            <p>
+                我们从一维费米链入手，其二次量子化哈密顿量如下
+                \begin{align}
+                \hat{H} = \sum_{i=1}^L \mu \hat{n}_i + U \hat{n}_i \hat{n}_{i+1} + t (\hat{c}_i^{\dagger} \hat{c}_{i+1} + \rm{H.c.})
+                \end{align}
+                取链长为5，先不考虑相互作用项 $U$(当然你也可以理解为粒子数恒定为1)，考虑周期边界条件，$\hat{H} =$ 的二次型部分可以写成
+                \begin{align}
+                \hat H = \sum_{i,j} \hat c_i^\dagger h_{ij} \hat c_j
+                \end{align}
+                其中矩阵 $h$ 为
+                \begin{equation}
+                \begin{array}{c|cccccc}
+                & \hat{c}_1 & \hat{c}_2 & \hat{c}_3 & \hat{c}_4 & \hat{c}_5 \\
+                \hline
+                \hat{c}_1^{\dagger} & \mu & t & 0 & 0 & t \\
+                \hat{c}_2^{\dagger} & t & \mu & t & 0 & 0 \\
+                \hat{c}_3^{\dagger} & 0 & t & \mu & t & 0 \\
+                \hat{c}_4^{\dagger} & 0 & 0 & t & \mu & t \\
+                \hat{c}_5^{\dagger} & t & 0 & 0 & t & \mu \\
+                \end{array} \label{eq9}
+                \end{equation}
+                注意现在 $\hat{H}$ 还是算符，上式给出的是它在 $\{\hat c_i\}$ 基底下的系数矩阵。接下来我们选定希尔伯特空间为 
+                $$\ket{1,0,0,0,0}, \cdots,
+                \ket{0,0,0,0,1}$$
+                其维度为5，则做完投影后的 $H$ 矩阵与上面是完全一样的，因此熟练了以后我们可以直接写
+                \begin{equation}
+                \begin{array}{c|cccccc}
+                & \ket{1,,,,} & \ket{,1,,,} & \ket{,,1,,} & \ket{,,,1,} & \ket{,,,,1} \\
+                \hline
+                \bra{1,,,,} & \mu & t & 0 & 0 & t \\
+                \bra{,1,,,} & t & \mu & t & 0 & 0 \\
+                \bra{,,1,,} & 0 & t & \mu & t & 0 \\
+                \bra{,,,1,} & 0 & 0 & t & \mu & t \\
+                \bra{,,,,1} & t & 0 & 0 & t & \mu \\
+                \end{array} \label{eq10}
+                \end{equation}
+                考虑相互作用后会复杂很多。此时理论上希尔伯特空间的维度为 $2^5$，但如果哈密顿量具有某些对称性/守恒量则可以缩小希尔伯特空间的维度(本质上只是这一行和这一列元素为0)，如粒子数守恒。以粒子数等于2为例 (粒子数为1相互作用项为0)，此时算符有如下作用规则
+                \begin{align}
+                c_i \ket{n_1, n_2, \ldots, n_i, \ldots, n_L} = (-1)^{\sum_{j< i} n_j} \sqrt{n_i} \ket{n_1, n_2, \ldots, n_i - 1, \ldots, n_L}
+                \end{align}
+                最后你会得到
+                \begin{equation}
+                \hspace{-1cm}
+                \small
+                \begin{array}{c|ccccccccccc}
+                & \ket{1,1,,,} & \ket{1,,1,,} & \ket{1,,,1,} & \ket{1,,,,1} & \ket{,1,1,,} & \ket{,1,,1,} & \ket{,1,,,1}
+                & \ket{,,1,1,} & \ket{,,1,,1} & \ket{,,,1,1} \\
+                \hline
+                \bra{1,1,,,} & 2\mu+U & t & & & & & -t & & & \\
+                \bra{1,,1,,} & t & 2\mu & t & & t & & & & -t & \\
+                \bra{1,,,1,} & & t & 2\mu & t & & t & & & & -t \\
+                \bra{1,,,,1} & & & t & 2\mu+U & & & t & & & \\
+                \bra{,1,1,,} & & t & & & 2\mu+U & t & & & & \\
+                \bra{,1,,1,} & & & t & & t & 2\mu & t & t & & \\
+                \bra{,1,,,1} & -t & & & t & & t & 2\mu & & t & \\
+                \bra{,,1,1,} & & & & & & t & & 2\mu+U & t & \\
+                \bra{,,1,,1} & & -t & & & & & t & t & 2\mu & t \\
+                \bra{,,,1,1} & & & -t & & & & & & t & 2\mu+U \\
+                \end{array} \nonumber
+                \end{equation}
+                注意，以上我们都考虑了PBC，即默认格点1和格点5之间有跃迁和相互作用。对角化这个矩阵就得到了多体系统的能谱。
+
+
+
+
+
+            </p>
+        </article>
+    </main>
+
+    <footer>
+        © <span id="year"></span> Haitao Hu
+    </footer>
+
+    <script>
+        // 自动更新年份
+        const yearElem = document.getElementById('year');
+        if (yearElem) {
+            yearElem.textContent = new Date().getFullYear();
+        }
+
+        // 自动更新最后修改时间
+        const lastUpdatedElem = document.getElementById("last-updated");
+        if (lastUpdatedElem) {
+            const t = new Date(document.lastModified);
+            const pad = n => String(n).padStart(2, "0");
+            const formatted = `${t.getFullYear()}-${pad(t.getMonth() + 1)}-${pad(t.getDate())}`;
+            lastUpdatedElem.textContent = formatted;
+        }
+
+        // 自动生成目录
+        const tocList = document.getElementById("toc-list");
+        if (tocList) {
+            const headings = document.querySelectorAll("h2");
+
+            headings.forEach((h, i) => {
+                // 没写 id 的话自动补一个
+                if (!h.id) {
+                    h.id = "section-" + (i + 1);
+                }
+
+                const li = document.createElement("li");
+                const a = document.createElement("a");
+                a.href = "#" + h.id;
+                a.textContent = h.textContent;
+                li.appendChild(a);
+                tocList.appendChild(li);
+            });
+        }
+        // 自动高亮所有 <pre><code>...</code></pre>
+        hljs.highlightAll();
+    </script>
+
+</body>
+
+</html>
