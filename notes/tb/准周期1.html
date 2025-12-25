@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Structure Optimization with VASP – Haitao Hu</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Notes on structure optimization using VASP" />
+
+    <!-- highlight.js 样式（主题可以换，这里用 github 风格） -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+
+    <!-- highlight.js 主脚本 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <!-- 语言包：matlab（如果还要别的语言就再多引入几个） -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/matlab.min.js"></script>
+
+    <!-- MathJax 配置 + 引入 -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']]
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+    </script>
+
+    <!-- 你可以直接把主页 index.html 里的 <style> 整段复制过来，
+       这里我只放最核心的一些，保证能看 -->
+    <style>
+        /* ===== 基本样式 ===== */
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            line-height: 1.6;
+            color: #222;
+            background-color: #f5f5f5;
+        }
+
+        a {
+            color: #0077cc;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        /* ===== 顶部导航栏 ===== */
+        header {
+            background: #111827;
+            color: #f9fafb;
+            padding: 16px 24px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .nav-container {
+            max-width: 900px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .site-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        nav a {
+            margin-left: 16px;
+            font-size: 14px;
+        }
+
+        /* ===== 主体内容 ===== */
+        main {
+            max-width: 900px;
+            margin: 24px auto 40px auto;
+            padding: 0 16px;
+        }
+
+        section {
+            background: #ffffff;
+            border-radius: 8px;
+            padding: 20px 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+        }
+
+        h1,
+        h2 {
+            margin-top: 0;
+        }
+
+        h1 {
+            font-size: 28px;
+            margin-bottom: 4px;
+        }
+
+        .subtitle {
+            color: #4b5563;
+            font-size: 15px;
+        }
+
+        h2 {
+            font-size: 20px;
+            margin-bottom: 8px;
+            border-left: 4px solid #2563eb;
+            padding-left: 8px;
+        }
+
+        ul {
+            padding-left: 20px;
+            margin-top: 4px;
+        }
+
+        .tag-list span {
+            display: inline-block;
+            background: #e5e7eb;
+            border-radius: 999px;
+            padding: 2px 10px;
+            font-size: 12px;
+            margin: 2px 4px 2px 0;
+        }
+
+        .two-column {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 24px;
+        }
+
+        .col {
+            flex: 1 1 260px;
+        }
+
+        .contact-list div {
+            margin-bottom: 4px;
+        }
+
+        footer {
+            text-align: center;
+            color: #6b7280;
+            font-size: 12px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 600px) {
+            header {
+                padding: 12px 16px;
+            }
+
+            .site-title {
+                font-size: 18px;
+            }
+
+            main {
+                margin-top: 16px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 顶部导航 -->
+    <header>
+        <div class="nav-container">
+            <div class="site-title">Haitao Hu</div>
+            <div class="breadcrumbs">
+                <a href="/index.html">Home</a> ·
+                <a href="/notes/tb/index.html">notes on Tight-binding models</a> ·
+                <span>准周期1</span>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <article class="note-card">
+            <h1>准周期1</h1>
+            <div class="note-meta">
+                Last updated:
+                <time id="last-updated"></time>
+            </div>
+
+            <!-- 自动生成目录 -->
+            <div class="toc">
+                <div class="toc-title">Contents</div>
+                <ul id="toc-list"></ul>
+            </div>
+
+            <!-- 正文部分，可随意替换 -->
+            <h2 id="basic-idea">1. 简介</h2>
+            <p>
+                准周期模型一般指形式如下的模型
+                \begin{align}
+                H = \sum_i (t_i c_i^{\dagger} c_{i+1} + {\rm H.c.}) + v_i c_i^{\dagger} c_i
+                , \label{eq1}
+                \end{align}
+                其中 $t_i$ 或 $v_i$ 具有即不像 Anderson 模型那样无序，又完全不具有平移对称性的性质。以后者为例，固定 $t_i = t$，取 $v_i$ 为某准周期势如 $v_i = \lambda
+                {\rm cos}(2 \pi \beta n +
+                \phi)$，$\beta$ 为某无理数，一般取为 $\dfrac{\sqrt{5} -
+                1}{2}$。由于无理数 $\beta$ 的存在，整条链不存在周期性，但格点与格点之间又不是完全没有关联，我们可以理解为所有格点的在位能取一系列存在关联的伪随机数。在这种情况下，特定参数范围内会出现局域态。
+            </p>
+            <h2 id="basic-idea">2. 自对偶性</h2>
+            <p>
+                形式如 $v_i = \lambda {\rm cos}(2 \pi \beta n + \phi)$ 的准周期势最早是由 Aubry 和 André 提出来的，所以我们现在一般叫它 AA
+                模型。后来大家发现他本质上对应着 2D Harper 模型，所以也有人叫他 AAH 模型。AAH 模型中一个很有意思的性质是他的自对偶性，
+                即模型哈密顿量在特定参数上的实空间和倒空间形式一致。换句话说就是，AAH 模型在实空间下的哈密顿量
+                \begin{equation}
+                H = -t \sum \limits_n (a_n^\dagger a_{n + 1} + {\rm H.c.}) - V \sum \limits_n {\rm cos}(2\pi \alpha
+                n)a_n^\dagger a_n
+                \end{equation}
+                经过如下傅立叶变换
+                \begin{equation}
+                b_k = \frac{1}{\sqrt{N}} \sum \limits_n e^{i k (2 \pi \alpha n)}a_n
+                \end{equation}
+                可以得到 k 空间下的哈密顿量
+                \begin{equation}
+                H = -\frac{V}{2} \sum \limits_k (b_k^\dagger b_{k + 1} + {\rm H.c.}) - 2t \sum \limits_k {\rm cos}(2\pi
+                \alpha k)b_k^\dagger b_k
+                \end{equation}
+                而你不难发现，当 $V = \pm 2t$ 时，AAH 模型在傅立叶变换前后形式一致。
+            </p>
+            <h2 id="basic-idea">3. 自对偶点即”迁移率边“</h2>
+            <p>
+                准周期体系中有一条被视作不可打破的规则，就是体系的自对偶点往往对应着系统的"迁移率边"，或者说扩展态和局域态的临界点。
+                一般认为这里的物理图像是，当实空间的波函数趋于扩展时，你做一个傅里叶变换他会趋于局域，而当实空间的波函数趋于局域时，傅里叶变换会使其趋于扩展。
+                因此在自对偶点上，自对偶所保证的傅里叶变换前后系统一致性意味着在这个点上波函数既不扩展也不局域，而是处于一种临界态，即扩展和局域的临界点。
+                当系统的无序强度小于这个临界值时，系统是扩展的，而当无序强度大于这个临界值时，系统是局域的。
+                以 AA 模型为例，当 $V < 2t$ 时，体系中所有态均为扩展态； 当 $V> 2t$ 时，体系中所有态均为局域态；而当 $V = 2t$ 时，
+                    体系中所有态均处于临界态。
+            </p>
+            <p>
+                这一点和传统的 Anderson 模型中的局域化有本质区别。换句话说，当考虑一维系统时
+                加任意小的没有任何关联的无序都会导致体系中所有态被局域化；
+                而当你的无序势是通过一个准周期势，标度律就失效了，系统就允许扩展态的出现。
+            </p>
+            <h2 id="basic-idea">4. 代码</h2>
+            <p>
+                以下是一个简单的 Matlab 代码计算 AAH 本征态的局域化性质
+            <pre><code class="language-matlab">
+% calculate D2/IPR versus E and V of AA model
+% Date: 2024/03/25   more information in notebook: note10, 20240317 
+clear; clc; close all;
+start_time = tic;
+
+% Parameters
+it = 10;    % iteration
+[Fn1, Fn] = Fibonacci(it);
+L = Fn;
+t = 1;
+V_sec = 0 : 0.1 : 4;
+alpha = Fn1 / Fn;
+theta = 0;
+h = 0;
+phi = theta + 1i * h;
+p = 0;  % p = 0 for open boundary conditions and p = 1 for pbc
+
+%%
+% Section: calculate
+%-----------------------------------------------------------------------------------------------------------
+evals_total = [];
+IPR_map = [];
+for V = V_sec
+    fprintf('V = %f\n', V);
+
+    % Generate the hamiltonian of H1
+    H1 = hami(L, t, V, alpha, theta, h, p);
+
+    % Calculate its eigenenergies and wavefunction and sort the eigenenergies
+    [vec1,E1] = eig(H1);
+    [E1,index_1] = sort(real(diag(E1)));  % remind the function sort(E1): here E1 should be 1*N not N*N !!!
+    vec1= vec1(:,index_1);
+    evals_total = [evals_total, E1];
+
+    %-------------------------normalizing-------------------------------
+    for a = 1 : 1 : size( vec1, 1 )
+        vec_zero = vec1( 1 : size(vec1, 1), a);
+        vec_uni(:,a) = ( real( vec_zero ).^2 + imag(vec_zero).^2) / sum( real(vec_zero).^2 + imag(vec_zero).^2 );
+    end
+
+    % calculate IPR and MIPR
+    for a = 1:1:size(vec1,1)
+        IPR(a, 1) = sum( vec_uni(:,a).^2 );
+    end
+    IPR_map = [IPR_map, IPR];
+end
+D2_map = -log(IPR_map) / log(Fn);
+end_time = toc(start_time);
+fprintf('运行时间（秒）= %f\n', end_time);
+
+
+%%
+% Section: plot
+%-----------------------------------------------------------------------------------------------------------
+figure();
+for a = 1 : size(V_sec, 2)
+X(a * size(evals_total, 1) - size(evals_total, 1) + 1 : a * size(evals_total, 1)) = V_sec(a);
+end
+X = X';
+
+for a = 1 : size(V_sec, 2)
+Y(a * size(evals_total, 1) - size(evals_total, 1) + 1 : a * size(evals_total, 1)) = evals_total(:,a);
+end
+Y = Y';
+
+for a = 1 : size(V_sec, 2)
+D2_plot(a * size(evals_total, 1) - size(evals_total, 1) + 1 : a * size(evals_total, 1)) = D2_map(:,a);
+end
+D2_plot = D2_plot';
+
+%colormap hot(summer,winter)
+colormap default
+scatter(X,Y,10,D2_plot,'filled')
+
+% set colorbar
+colorbar
+c = colorbar;
+c.FontSize = 16;  
+c.Ticks = linspace(min(D2_plot(:)), max(D2_plot(:)), 2); % 设置刻度位置
+c.TickLabels = arrayfun(@(x) sprintf('%.1f', x), c.Ticks, 'UniformOutput', false); % 设置刻度标签
+%c.Position = [0.93, 0.4, 0.02, 0.2]; % [left, bottom, width, height]
+
+xlabel('V');
+ylabel('E')
+
+%%
+% Some functions
+%-----------------------------------------------------------------------------------------------------------
+function [Fn1, Fn] = Fibonacci(iterations)
+Fn1 = 0;
+Fn = 1;
+for n = 1:iterations
+    Fn2 = Fn1;
+    Fn1 = Fn;
+    Fn = Fn1 + Fn2;
+end
+end
+
+function H00 = hami(L, t, V, alpha, theta, h, p)
+% on-site energy
+for a = 1 : 1 : L
+    H00(a, a) = V * cos ( 2*pi*alpha*a + theta + 1i * h );
+end
+
+% hopping term
+for a = 1 : 1 : L - 1
+    H00(a, a + 1) = t; 
+    H00(a + 1, a) = t; 
+end
+
+if (p == 1)
+    H00(1, L) = t;
+    H00(L, 1) = t;
+end
+
+% check the hermitian of H00
+%if sum(sum(H00 ~= H00')) ~= size(H00,1)^2
+%    error('wrong, H00 should be hermitian');
+%end
+end
+            </code></pre>
+
+            <p>
+                结果如图所示，黄色代表扩展态，蓝色代表局域态，可以看到临界点在 $V = 2t$ 附近。
+            </p>
+
+            <img src="AAH1.png" alt="AAH Localization Result"
+                style="display:block; margin:10px auto 0; max-width:600px; width:100%; height:auto;" />
+
+        
+
+
+        </article>
+    </main>
+
+    <footer>
+        © <span id="year"></span> Haitao Hu
+    </footer>
+
+    <script>
+        // 自动更新年份
+        const yearElem = document.getElementById('year');
+        if (yearElem) {
+            yearElem.textContent = new Date().getFullYear();
+        }
+
+        // 自动更新最后修改时间
+        const lastUpdatedElem = document.getElementById("last-updated");
+        if (lastUpdatedElem) {
+            const t = new Date(document.lastModified);
+            const pad = n => String(n).padStart(2, "0");
+            const formatted = `${t.getFullYear()}-${pad(t.getMonth() + 1)}-${pad(t.getDate())}`;
+            lastUpdatedElem.textContent = formatted;
+        }
+
+        // 自动生成目录
+        const tocList = document.getElementById("toc-list");
+        if (tocList) {
+            const headings = document.querySelectorAll("h2");
+
+            headings.forEach((h, i) => {
+                // 没写 id 的话自动补一个
+                if (!h.id) {
+                    h.id = "section-" + (i + 1);
+                }
+
+                const li = document.createElement("li");
+                const a = document.createElement("a");
+                a.href = "#" + h.id;
+                a.textContent = h.textContent;
+                li.appendChild(a);
+                tocList.appendChild(li);
+            });
+        }
+        // 自动高亮所有 <pre><code>...</code></pre>
+        hljs.highlightAll();
+    </script>
+
+</body>
+
+</html>
