@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Other Notes - Haitao Hu</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Other notes by Haitao Hu" />
+
+  <style>
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.6;
+      color: #222;
+      background-color: #f5f5f5;
+    }
+
+    a {
+      color: #0077cc;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    header {
+      background: #111827;
+      color: #f9fafb;
+      padding: 16px 24px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .nav-container {
+      max-width: 900px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .site-title {
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    main {
+      max-width: 900px;
+      margin: 24px auto 40px auto;
+      padding: 0 16px;
+    }
+
+    section {
+      background: #ffffff;
+      border-radius: 8px;
+      padding: 20px 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+    }
+
+    h1 {
+      margin-top: 0;
+      font-size: 28px;
+      margin-bottom: 4px;
+    }
+
+    footer {
+      text-align: center;
+      color: #6b7280;
+      font-size: 12px;
+      margin-bottom: 20px;
+    }
+
+    @media (max-width: 600px) {
+      header {
+        padding: 12px 16px;
+      }
+
+      .site-title {
+        font-size: 18px;
+      }
+
+      main {
+        margin-top: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="nav-container">
+      <div class="site-title">Haitao Hu</div>
+      <div class="breadcrumbs">
+        <a href="/index.html">Home</a> ·
+        <span>other notes</span>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section>
+      <h1>Other notes</h1>
+      <p>Here I collect notes outside DFT and Tight-binding topics.</p>
+
+      <!-- AUTO-NOTES:START -->
+      <ul id="managed-notes-list">
+        <li data-created="2026-03-05T15:03:52+08:00">
+          <a href="git.html">
+            git
+          </a>
+        </li>
+      </ul>
+<!-- AUTO-NOTES:END -->
+    </section>
+  </main>
+
+  <footer>
+    © <span id="year"></span> Haitao Hu
+  </footer>
+
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
