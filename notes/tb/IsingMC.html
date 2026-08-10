@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 
 <head>
     <meta charset="UTF-8" />
-    <title>Structure Optimization with VASP – Haitao Hu</title>
+    <title>Ising model – Haitao Hu</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Notes on structure optimization using VASP" />
+    <meta name="description" content="Notes on Ising model" />
 
     <!-- highlight.js 样式（主题可以换，这里用 github 风格） -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
@@ -83,6 +83,60 @@
             margin: 24px auto 40px auto;
             padding: 0 16px;
         }
+
+        .note-card {
+            background: #ffffff;
+            border-radius: 8px;
+            padding: 20px 24px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+            overflow: hidden;
+        }
+
+        .note-meta {
+            color: #4b5563;
+            font-size: 14px;
+            margin-bottom: 14px;
+        }
+
+        .toc {
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            background: #f8fafc;
+            padding: 12px 14px;
+            margin-bottom: 18px;
+        }
+
+        .toc-title {
+            color: #374151;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .toc ul {
+            margin: 0;
+            padding-left: 18px;
+        }
+
+        .toc li {
+            margin-bottom: 4px;
+        }
+
+        .note-card pre {
+            box-sizing: border-box;
+            max-width: 100%;
+            overflow-x: auto;
+            background: #f6f8fa;
+            border-radius: 6px;
+            padding: 10px 12px;
+        }
+
+        .note-card mjx-container[display="true"] {
+            max-width: 100%;
+            overflow-x: auto;
+            overflow-y: hidden;
+        }
+
 
         section {
             background: #ffffff;
@@ -193,14 +247,14 @@
             </div>
 
             <!-- 正文部分，可随意替换 -->
-            <h2 id="basic-idea">1. Ising 模型</h2>
+            <h2 id="ising-model">1. Ising 模型</h2>
             <p>
                 Ising模型，是物理学家 Lenz 和 Ising (Lenz的学生) 在 1920
                 年左右提出的用来模拟磁性的格点模型。其考虑的是离散网格模型，在每一个格点处有一个自旋，取值只能取1或-1，分别代表自旋向上和向下。考虑最近邻相互作用，相互作用强度为$J_{ij}$。此外，每个自旋还受到外部磁场的影响，其强度为$h_i$。体系总哈密顿量为
                 \begin{align}
-                H(\sigma) = -\sum_{\braket{i,j}} J_{ij} \sigma_i \sigma_j - \mu \sum_j h_j \sigma_j. \label{eq1}
+                H(\sigma) = -\sum_{\langle i,j\rangle} J_{ij} \sigma_i \sigma_j - \mu \sum_j h_j \sigma_j. \label{eq1}
                 \end{align}
-                其中 $\braket{i,j}$ 代表最近邻，$\mu$ 代表磁矩，$\sigma_i$ 只能取 $\pm 1$。温度 $T$
+                其中 $\langle i,j\rangle$ 代表最近邻，$\mu$ 代表磁矩，$\sigma_i$ 只能取 $\pm 1$。温度 $T$
                 下，系统不是永远待在能量最低的构型上，而是在热涨落下在各种构型之间切换。根据统计物理，正则系综在热平衡时构型 $\sigma$ 出现的概率为
                 \begin{align}
                 P_{\beta}(\sigma) = e^{- \beta H(\sigma)} / Z_{\beta}. \label{eq2}
@@ -216,7 +270,7 @@
                 当$J_{ij}$大于0时，称为铁磁，反之为反铁磁。而对于正的$h_j$，格点$j$上的自旋趋于朝向正，反之向负。
 
 
-            <h2 id="basic-idea">2. 蒙卡模拟</h2>
+            <h2 id="metropolis">2. 蒙卡模拟</h2>
             <p>
                 蒙卡的核心思想是重要抽样，这是因为随机抽样得到的很多样本本质是在做无用功，而在高维问题中，要遍历所有可能的状态又是不现实的。实现这一思想的方法是Metropolis算法，其基本流程如下
             <ol>
@@ -225,58 +279,73 @@
                 <li>如果能量降低则保持翻转，如果能量升高则按$e^{- \beta (H' - H)}$概率保持翻转</li>
                 <li>重复以上步骤，可以通过收敛判断，也可以通过设置一个迭代步数</li>
             </ol>
-            <h2 id="basic-idea">3. 代码</h2>
+            <h2 id="matlab-code">3. 代码</h2>
             <p>
-                以下是一个简单的 Matlab 代码实现二维 Ising 模型的 Monte Carlo 模拟，计算不同温度下的磁化强度。
+                以下 Matlab 代码考虑零外场、周期边界条件，并取 $J=k_B=1$。对每个温度先丢弃一段热化过程，再在测量阶段按固定间隔抽样，计算单位格点绝对磁化强度 $\langle |m|\rangle$。
             <pre><code class="language-matlab">
 clear; clc; close all
-N = 10;
+N = 16;
 J = 1;
-nsteps = 80000;
+ntherm = 200 * N^2;      % 200 Monte Carlo sweeps for thermalization
+nmeasure = 1000 * N^2;   % 1000 sweeps for measurement
+sample_every = N^2;      % sample once per sweep
 T_sec = 0.1:0.1:5;
 
-ts = zeros(size(T_sec));  
+m_abs = zeros(size(T_sec));
 aa = 1;
 for T = T_sec
-    %initial spin
+    % Independent random initial state at each temperature
     spins = 2 * (rand(N,N) > 0.5) - 1;
 
-    %metropolis
-    for n = 1:1:nsteps
-        %choose a spin in random
+    % Thermalization: discarded samples
+    for n = 1:ntherm
         i = randi([1,N],1,1);
         j = randi([1,N],1,1);
-
-        %the difference of energy
-        dE= 2 * J * spins(i,j) * (spins(mod(i,N)+1,j) + spins(mod(i-2,N)+1,j) + spins(i,mod(j,N)+1) + spins(i,mod(j-2,N)+1));
-
-        %metropolis rule
-        if dE < 0
-            spins(i,j) = -spins(i,j);
-        elseif rand() < exp(-dE/T)
+        nn = spins(mod(i,N)+1,j) + spins(mod(i-2,N)+1,j) ...
+           + spins(i,mod(j,N)+1) + spins(i,mod(j-2,N)+1);
+        dE = 2 * J * spins(i,j) * nn;
+        if dE <= 0 || rand() < exp(-dE/T)
             spins(i,j) = -spins(i,j);
         end
     end
 
-    % total spin
-    ts(aa) = abs(sum(sum(spins))/N/N);
-    aa = aa+1;
+    % Measurement and statistical average
+    m_sum = 0;
+    nsamples = 0;
+    for n = 1:nmeasure
+        i = randi([1,N],1,1);
+        j = randi([1,N],1,1);
+        nn = spins(mod(i,N)+1,j) + spins(mod(i-2,N)+1,j) ...
+           + spins(i,mod(j,N)+1) + spins(i,mod(j-2,N)+1);
+        dE = 2 * J * spins(i,j) * nn;
+        if dE <= 0 || rand() < exp(-dE/T)
+            spins(i,j) = -spins(i,j);
+        end
+
+        if mod(n, sample_every) == 0
+            m_sum = m_sum + abs(sum(spins(:))) / N^2;
+            nsamples = nsamples + 1;
+        end
+    end
+    m_abs(aa) = m_sum / nsamples;
+    aa = aa + 1;
 end
 
 % plot
-plot(T_sec, ts, 'o-', 'linewidth', 1.5, 'color', 'k')
+plot(T_sec, m_abs, 'o-', 'linewidth', 1.5, 'color', 'k')
 xlabel('Temperature','FontSize',15);
-ylabel('Magnetization','FontSize',15)
+ylabel('&lt;|m|&gt;','FontSize',15)
 </code></pre>
 
             <p>
-                结果大致如图所示，可以看到在临界温度附近（约 $T \approx 2.5$），体系的磁化强度出现快速下降。
+                热力学极限下，二维方格 Ising 模型的精确临界温度满足
+                $T_c/J=2/\ln(1+\sqrt{2})\approx2.269$。有限尺寸系统不会出现真正的不连续奇点，而是在临界区附近呈现随尺寸变化的平滑交叉；若要精确确定 $T_c$，需要进一步做有限尺寸标度分析。
             </p>
 
             <img src="Ising.png" alt="Ising MC Result"
                 style="display:block; margin:10px auto 0; max-width:600px; width:100%; height:auto;" />
  
-            <h2 id="basic-idea">题外话：配分函数和自由能</h2>
+            <h2 id="free-energy">题外话：配分函数和自由能</h2>
             <p>
                 有了配分函数就可以求出自由能 $F$
                 \begin{align}

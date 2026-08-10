@@ -26,8 +26,7 @@
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
     </script>
 
-    <!-- 你可以直接把主页 index.html 里的 <style> 整段复制过来，
-       这里我只放最核心的一些，保证能看 -->
+    <!-- 自定义样式 -->
     <style>
         /* ===== 基本样式 ===== */
         body {
@@ -137,7 +136,6 @@
             overflow-y: hidden;
         }
 
-
         section {
             background: #ffffff;
             border-radius: 8px;
@@ -227,14 +225,14 @@
             <div class="breadcrumbs">
                 <a href="/index.html">Home</a> ·
                 <a href="/notes/tb/index.html">notes on Tight-binding models</a> ·
-                <span>准周期1</span>
+                <span>准周期2</span>
             </div>
         </div>
     </header>
 
     <main>
         <article class="note-card">
-            <h1>准周期1</h1>
+            <h1>准周期2</h1>
             <div class="note-meta">
                 Last updated:
                 <time id="last-updated"></time>
@@ -247,185 +245,139 @@
             </div>
 
             <!-- 正文部分，可随意替换 -->
-            <h2 id="introduction">1. 简介</h2>
+            <h2 id="transfer-matrix">1. 转移矩阵与 Lyapunov 指数</h2>
             <p>
-                准周期模型一般指形式如下的模型
+                考虑一维最近邻紧束缚模型
                 \begin{align}
-                H = \sum_i (t_i c_i^{\dagger} c_{i+1} + {\rm H.c.}) + v_i c_i^{\dagger} c_i
+                H=-t\sum_i (|i\rangle\langle i+1|+|i+1\rangle\langle i|)+\sum_i V_i |i\rangle\langle i|,
+                \end{align}
+                定态薛定谔方程为
+                \begin{align}
+                H \ket{\psi}= E \ket{\psi}
                 , \label{eq1}
                 \end{align}
-                其中 $t_i$ 或 $v_i$ 既不像 Anderson 模型那样随机，又不具有通常的晶格平移对称性。以后者为例，固定 $t_i = t$，取 $v_i$ 为某准周期势，如 $v_i = \lambda
-                {\rm cos}(2 \pi \beta i +
-                \phi)$，$\beta$ 为某无理数，一般取为 $\dfrac{\sqrt{5} -
-                1}{2}$。由于无理数 $\beta$ 的存在，整条链不存在周期性，但格点与格点之间又不是完全没有关联，我们可以理解为所有格点的在位能取一系列存在关联的伪随机数。在这种情况下，特定参数范围内会出现局域态。
+                代入 $\ket{\psi} = \sum_i \alpha_i \ket{i}$ 得到离散方程
+                \begin{align}
+                -t (\alpha_{i+1} + \alpha_{i-1}) + V_i \alpha_i = E \alpha_i.
+                \label{eq2}
+                \end{align}
+                将其整理一下可以写成
+                \begin{align}
+                \begin{pmatrix}
+                \alpha_{i+1} \\
+                \alpha_i
+                \end{pmatrix}
+                =
+                \begin{pmatrix}
+                \frac{V_i - E}{t} & -1 \\
+                1 & 0
+                \end{pmatrix}
+                \begin{pmatrix}
+                \alpha_{i} \\
+                \alpha_{i-1}
+                \end{pmatrix}
+                . \label{eq3}
+                \end{align}
+                记
+                \begin{align}
+                T_i =
+                \begin{pmatrix}
+                \frac{V_i - E}{t} & -1 \\
+                1 & 0
+                \end{pmatrix}
+                ,
+                \end{align}
+                则有
+                \begin{align}
+                \begin{pmatrix}
+                \alpha_{i+1} \\
+                \alpha_i
+                \end{pmatrix}
+                =
+                T_i ~ T_{i-1} ~ \cdots ~ T_2
+                \begin{pmatrix}
+                \alpha_{2} \\
+                \alpha_{1}
+                \end{pmatrix}
+                . \label{eq5}
+                \end{align}
+                给定能量 $E$ 与初始向量 $(\alpha_2,\alpha_1)^T$，即可通过矩阵迭代得到任意 $i$ 处的振幅。我们把矩阵 $T_i$ 称为转移矩阵，它将第 $i-1$ 个格点和第 $i$
+                个格点的波函数振幅映射到第 $i$ 个格点和第 $i+1$ 个格点的波函数振幅。
+                基于转移矩阵可以研究波函数随距离的指数增长或衰减。当链长很大时，直接计算
+                $T_L\cdots T_2$ 会迅速上溢或下溢，因此在每一步都做一次 QR 分解。取 $Q_1=I$，递推定义
+                \begin{align}
+                T_i Q_{i-1}=Q_iR_i,
+                \end{align}
+                其中 $Q_i$ 为正交矩阵，$R_i$ 为上三角矩阵。不断正交化后，第 $a$ 个 Lyapunov 指数由局域伸缩因子的对数平均给出：
+                \begin{align}
+                \gamma_a=\lim_{L\to\infty}\frac{1}{L}\sum_{i=2}^{L}\ln |(R_i)_{aa}|.
+                \end{align}
+                对这里的 $2\times2$ 转移矩阵有 $\det T_i=1$，所以两个指数之和为零，可写为 $\gamma_1=\gamma$、$\gamma_2=-\gamma$。
+                若 $E$ 是能谱内的本征能量，正 Lyapunov 指数给出波函数的逆局域化长度：
+                \begin{align}
+                \xi^{-1}(E)=\gamma(E).
+                \end{align}
+                注意这里累加的是 $\ln |(R_i)_{aa}|$，而不是 $\ln |(R_i)_{aa}|^2$；后者会额外多出因子2。对标准 AAH 模型
+                $V_i=V\cos(2\pi\alpha i+\theta)$，谱内能量的解析结果为
+                \begin{align}
+                \gamma(E)=\max\left\{0,\ln\left|\frac{V}{2t}\right|\right\},
+                \end{align}
+                因此在 $|V|=2|t|$ 发生局域化转变。
+
+
             </p>
-            <h2 id="self-duality">2. 自对偶性</h2>
+            <h2 id="lyapunov-code">2. QR 算法代码</h2>
             <p>
-                形式如 $v_i = \lambda {\rm cos}(2 \pi \beta n + \phi)$ 的准周期势最早是由 Aubry 和 André 提出来的，所以我们现在一般叫它 AA
-                模型。后来大家发现他本质上对应着 2D Harper 模型，所以也有人叫他 AAH 模型。AAH 模型中一个很有意思的性质是他的自对偶性，
-                即模型哈密顿量在特定参数上的实空间和倒空间形式一致。换句话说就是，AAH 模型在实空间下的哈密顿量
-                \begin{equation}
-                H = -t \sum \limits_n (a_n^\dagger a_{n + 1} + {\rm H.c.}) - V \sum \limits_n {\rm cos}(2\pi \alpha
-                n)a_n^\dagger a_n
-                \end{equation}
-                经过如下傅立叶变换
-                \begin{equation}
-                b_k = \frac{1}{\sqrt{N}} \sum \limits_n e^{i k (2 \pi \alpha n)}a_n
-                \end{equation}
-                可以得到 k 空间下的哈密顿量
-                \begin{equation}
-                H = -\frac{V}{2} \sum \limits_k (b_k^\dagger b_{k + 1} + {\rm H.c.}) - 2t \sum \limits_k {\rm cos}(2\pi
-                \alpha k)b_k^\dagger b_k
-                \end{equation}
-                而你不难发现，当 $|V| = 2|t|$ 时，AAH 模型在傅立叶变换前后形式一致。
-            </p>
-            <h2 id="localization-transition">3. 自对偶点与局域化转变</h2>
-            <p>
-                对标准 AA 模型，自对偶性给出参数空间中的局域化转变点。傅里叶变换交换实空间与对偶空间中的跃迁和准周期势，因此
-                当 $|V|<2|t|$ 时所有本征态均为扩展态；当 $|V|>2|t|$ 时所有本征态均为局域态；在 $|V|=2|t|$ 时所有本征态均为临界态。
-                这里是所有能量的本征态同时发生转变，并不存在把同一能谱中的扩展态与局域态分开的能量迁移率边。广义准周期模型可以出现真正的迁移率边，但需要额外的模型结构，不能仅凭自对偶性一概而论。
-            </p>
-            <p>
-                这一点和传统的 Anderson 模型中的局域化有本质区别。换句话说，当考虑一维系统时
-                加任意小的无关联随机无序都会导致所有单粒子态局域化；
-                而准周期势是确定性的并具有长程关联，随机无序的一参数标度结论不能直接套用，因此系统允许扩展态与有限强度的局域化转变。
-            </p>
-            <h2 id="ipr-code">4. 代码</h2>
-            <p>
-                以下是一个简单的 Matlab 代码计算 AAH 本征态的局域化性质
+                以下 Matlab 代码在 $E=0$ 处逐步做 QR 分解，比较数值 Lyapunov 指数与标准 AAH 模型的解析结果。
             <pre><code class="language-matlab">
-% calculate D2/IPR versus E and V of AA model
-% Date: 2024/03/25   more information in notebook: note10, 20240317 
 clear; clc; close all;
-start_time = tic;
-
-% Parameters
-it = 10;    % iteration
-[Fn1, Fn] = Fibonacci(it);
-L = Fn;
 t = 1;
-V_sec = 0 : 0.1 : 4;
-alpha = Fn1 / Fn;
+E = 0;
+alpha = (sqrt(5) - 1) / 2;
 theta = 0;
-h = 0;
-phi = theta + 1i * h;
-p = 0;  % p = 0 for open boundary conditions and p = 1 for pbc
+L = 5e4;
+V_sec = 0:0.05:4;
+gamma_num = zeros(size(V_sec));
 
-%%
-% Section: calculate
-%-----------------------------------------------------------------------------------------------------------
-evals_total = [];
-IPR_map = [];
-for V = V_sec
-    fprintf('V = %f\n', V);
+for iv = 1:numel(V_sec)
+    V = V_sec(iv);
+    Q = eye(2);
+    log_growth = zeros(2,1);
 
-    % Generate the hamiltonian of H1
-    H1 = hami(L, t, V, alpha, theta, h, p);
+    for i = 1:L
+        Vi = V * cos(2*pi*alpha*i + theta);
+        Ti = [(Vi-E)/t, -1; 1, 0];
+        [Q,R] = qr(Ti * Q, 0);
 
-    % Calculate its eigenenergies and wavefunction and sort the eigenenergies
-    [vec1,E1] = eig(H1);
-    [E1,index_1] = sort(real(diag(E1)));  % remind the function sort(E1): here E1 should be 1*N not N*N !!!
-    vec1= vec1(:,index_1);
-    evals_total = [evals_total, E1];
+        % Fix the arbitrary QR signs so diag(R) is non-negative
+        s = sign(diag(R));
+        s(s == 0) = 1;
+        S = diag(s);
+        Q = Q * S;
+        R = S * R;
 
-    %-------------------------normalizing-------------------------------
-    for a = 1 : 1 : size( vec1, 1 )
-        vec_zero = vec1( 1 : size(vec1, 1), a);
-        vec_uni(:,a) = ( real( vec_zero ).^2 + imag(vec_zero).^2) / sum( real(vec_zero).^2 + imag(vec_zero).^2 );
+        log_growth = log_growth + log(abs(diag(R)));
     end
 
-    % calculate IPR and MIPR
-    for a = 1:1:size(vec1,1)
-        IPR(a, 1) = sum( vec_uni(:,a).^2 );
-    end
-    IPR_map = [IPR_map, IPR];
-end
-% finite-size estimator; a strict D2 requires scaling with several L
-D2_map = -log(IPR_map) / log(Fn);
-end_time = toc(start_time);
-fprintf('运行时间（秒）= %f\n', end_time);
-
-
-%%
-% Section: plot
-%-----------------------------------------------------------------------------------------------------------
-figure();
-for a = 1 : size(V_sec, 2)
-X(a * size(evals_total, 1) - size(evals_total, 1) + 1 : a * size(evals_total, 1)) = V_sec(a);
-end
-X = X';
-
-for a = 1 : size(V_sec, 2)
-Y(a * size(evals_total, 1) - size(evals_total, 1) + 1 : a * size(evals_total, 1)) = evals_total(:,a);
-end
-Y = Y';
-
-for a = 1 : size(V_sec, 2)
-D2_plot(a * size(evals_total, 1) - size(evals_total, 1) + 1 : a * size(evals_total, 1)) = D2_map(:,a);
-end
-D2_plot = D2_plot';
-
-%colormap hot(summer,winter)
-colormap default
-scatter(X,Y,10,D2_plot,'filled')
-
-% set colorbar
-colorbar
-c = colorbar;
-c.FontSize = 16;  
-c.Ticks = linspace(min(D2_plot(:)), max(D2_plot(:)), 2); % 设置刻度位置
-c.TickLabels = arrayfun(@(x) sprintf('%.1f', x), c.Ticks, 'UniformOutput', false); % 设置刻度标签
-%c.Position = [0.93, 0.4, 0.02, 0.2]; % [left, bottom, width, height]
-
-xlabel('V');
-ylabel('E')
-
-%%
-% Some functions
-%-----------------------------------------------------------------------------------------------------------
-function [Fn1, Fn] = Fibonacci(iterations)
-Fn1 = 0;
-Fn = 1;
-for n = 1:iterations
-    Fn2 = Fn1;
-    Fn1 = Fn;
-    Fn = Fn1 + Fn2;
-end
+    exponents = sort(log_growth / L, 'descend');
+    gamma_num(iv) = max(exponents(1), 0);
 end
 
-function H00 = hami(L, t, V, alpha, theta, h, p)
-% on-site energy
-for a = 1 : 1 : L
-    H00(a, a) = V * cos ( 2*pi*alpha*a + theta + 1i * h );
-end
+gamma_exact = max(0, log(max(V_sec, eps) / (2*abs(t))));
 
-% hopping term
-for a = 1 : 1 : L - 1
-    H00(a, a + 1) = t; 
-    H00(a + 1, a) = t; 
-end
-
-if (p == 1)
-    H00(1, L) = t;
-    H00(L, 1) = t;
-end
-
-% check the hermitian of H00
-%if sum(sum(H00 ~= H00')) ~= size(H00,1)^2
-%    error('wrong, H00 should be hermitian');
-%end
-end
+plot(V_sec, gamma_num, 'k-', 'LineWidth', 1.5); hold on
+plot(V_sec, gamma_exact, 'r--', 'LineWidth', 1.5);
+xlabel('V/t');
+ylabel('Lyapunov exponent');
+legend('QR numerical', 'AAH exact', 'Location', 'northwest');
             </code></pre>
 
             <p>
-                结果如图所示，黄色代表较扩展的态，蓝色代表较局域的态，可以看到临界点在 $V = 2t$ 附近。这里的
-                $-\ln({\rm IPR})/\ln L$ 是单一有限尺寸下对相关维数 $D_2$ 的估计；严格的 $D_2$ 需要对多个系统尺寸做标度分析。
+                数值结果随链长增加应趋近解析曲线：$V<2t$ 时 $\gamma=0$，$V>2t$ 时
+                $\gamma=\ln(V/2t)>0$，相应局域化长度为 $\xi=1/\gamma$。
             </p>
 
-            <img src="AAH1.png" alt="AAH Localization Result"
-                style="display:block; margin:10px auto 0; max-width:600px; width:100%; height:auto;" />
 
-        
 
 
         </article>

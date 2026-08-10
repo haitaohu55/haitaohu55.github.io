@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 
 <head>
     <meta charset="UTF-8" />
-    <title>Structure Optimization with VASP – Haitao Hu</title>
+    <title>Exact diagonalization – Haitao Hu</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Notes on structure optimization using VASP" />
+    <meta name="description" content="Notes on exact diagonalization" />
 
     <!-- highlight.js 样式（主题可以换，这里用 github 风格） -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
@@ -83,6 +83,60 @@
             margin: 24px auto 40px auto;
             padding: 0 16px;
         }
+
+        .note-card {
+            background: #ffffff;
+            border-radius: 8px;
+            padding: 20px 24px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+            overflow: hidden;
+        }
+
+        .note-meta {
+            color: #4b5563;
+            font-size: 14px;
+            margin-bottom: 14px;
+        }
+
+        .toc {
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            background: #f8fafc;
+            padding: 12px 14px;
+            margin-bottom: 18px;
+        }
+
+        .toc-title {
+            color: #374151;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .toc ul {
+            margin: 0;
+            padding-left: 18px;
+        }
+
+        .toc li {
+            margin-bottom: 4px;
+        }
+
+        .note-card pre {
+            box-sizing: border-box;
+            max-width: 100%;
+            overflow-x: auto;
+            background: #f6f8fa;
+            border-radius: 6px;
+            padding: 10px 12px;
+        }
+
+        .note-card mjx-container[display="true"] {
+            max-width: 100%;
+            overflow-x: auto;
+            overflow-y: hidden;
+        }
+
 
         section {
             background: #ffffff;
@@ -193,7 +247,7 @@
             </div>
 
             <!-- 正文部分，可随意替换 -->
-            <h2 id="basic-idea">1. 精确对角化</h2>
+            <h2 id="exact-diagonalization">1. 精确对角化</h2>
             <p>
                 我们从定态方程入手
                 \begin{align}
@@ -243,7 +297,7 @@
                 \label{eq4}
                 \end{equation}
                 对角化哈密顿量矩阵$H$即可得到其本征能。这里的$H_{m,n}$不再是算符，而是做完投影的矩阵元。
-            <h2 id="basic-idea">2. 粒子数表象</h2>
+            <h2 id="number-representation">2. 粒子数表象</h2>
             <p>
                 考虑一维谐振子哈密顿量
                 \begin{align}
@@ -263,11 +317,12 @@
                 \end{align}
                 其中 $a^{\dagger}a$ 就是粒子数算符 $\hat{n}$。
 
-            <h2 id="basic-idea">3. 费米一维链</h2>
+            <h2 id="fermion-chain">3. 费米一维链</h2>
             <p>
                 我们从一维费米链入手，其二次量子化哈密顿量如下
                 \begin{align}
-                \hat{H} = \sum_{i=1}^L \mu \hat{n}_i + U \hat{n}_i \hat{n}_{i+1} + t (\hat{c}_i^{\dagger} \hat{c}_{i+1} + \rm{H.c.})
+                \hat{H} = \sum_{i=1}^L \left[\mu \hat{n}_i + U \hat{n}_i \hat{n}_{i+1}
+                + t (\hat{c}_i^{\dagger} \hat{c}_{i+1} + {\rm H.c.})\right]
                 \end{align}
                 取链长为5，先不考虑相互作用项 $U$(当然你也可以理解为粒子数恒定为1)，考虑周期边界条件，$\hat{H} =$ 的二次型部分可以写成
                 \begin{align}
@@ -300,11 +355,11 @@
                 \bra{,,,,1} & t & 0 & 0 & t & \mu \\
                 \end{array} \label{eq10}
                 \end{equation}
-                考虑相互作用后会复杂很多。此时理论上希尔伯特空间的维度为 $2^5$，但如果哈密顿量具有某些对称性/守恒量则可以缩小希尔伯特空间的维度(本质上只是这一行和这一列元素为0)，如粒子数守恒。以粒子数等于2为例 (粒子数为1相互作用项为0)，此时算符有如下作用规则
+                考虑相互作用后会复杂很多。完整 Fock 空间的维度为 $2^5$。由于哈密顿量守恒总粒子数，它可以分解为互不耦合的粒子数分块，因此可以直接限制在固定粒子数子空间。以粒子数等于2为例，该子空间维度为 $\binom{5}{2}=10$（粒子数为1时相互作用项为0）。此时算符有如下作用规则
                 \begin{align}
                 c_i \ket{n_1, n_2, \ldots, n_i, \ldots, n_L} = (-1)^{\sum_{j< i} n_j} \sqrt{n_i} \ket{n_1, n_2, \ldots, n_i - 1, \ldots, n_L}
                 \end{align}
-                最后你会得到
+                取基底顺序如下，最后会得到
                 \begin{equation}
                 \hspace{-1cm}
                 \small
@@ -324,7 +379,7 @@
                 \bra{,,,1,1} & & & -t & & & & & & t & 2\mu+U \\
                 \end{array} \nonumber
                 \end{equation}
-                注意，以上我们都考虑了PBC，即默认格点1和格点5之间有跃迁和相互作用。对角化这个矩阵就得到了多体系统的能谱。
+                注意，以上都采用 PBC，即默认格点1和格点5之间有跃迁和相互作用。矩阵中跨越边界的跃迁元带有 $-t$，这是在当前 Fock 基底排序下由费米反对易关系产生的符号；对固定偶数粒子数扇区，边界跃迁相对体内跃迁多一个负号。对角化这个矩阵即可得到该粒子数扇区的多体能谱。
 
 
 
