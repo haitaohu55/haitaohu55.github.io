@@ -31,6 +31,18 @@ SHORT_NOTE_DESCRIPTIONS = [
     "Short notes on tight-binding calculations.",
     "Other short notes.",
 ]
+PUBLICATIONS_INTRO = "Selected work in quasiperiodic systems and localization, with brief abstracts."
+GOOGLE_SCHOLAR_URL = "https://scholar.google.com.hk/citations?hl=zh-CN&user=51eUsJkAAAAJ"
+APS_PUBLICATION_URLS = [
+    "https://journals.aps.org/prl/abstract/10.1103/rl1f-ptzq",
+    "https://journals.aps.org/prb/abstract/10.1103/2rfb-j778",
+    "https://journals.aps.org/prb/abstract/10.1103/pk8h-xlld",
+]
+DOI_LINK_URLS = [
+    "https://doi.org/10.1103/rl1f-ptzq",
+    "https://doi.org/10.1103/2rfb-j778",
+    "https://doi.org/10.1103/pk8h-xlld",
+]
 
 
 class PageParser(HTMLParser):
@@ -43,6 +55,7 @@ class PageParser(HTMLParser):
         self.nav_hrefs: list[str] = []
         self.profile_depth = 0
         self.profile_text: list[str] = []
+        self.publication_title_hrefs: list[str] = []
         self.all_text: list[str] = []
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
@@ -55,6 +68,8 @@ class PageParser(HTMLParser):
         if tag == "a" and attributes.get("href"):
             href = attributes["href"] or ""
             self.hrefs.append(href)
+            if "publication-title" in classes:
+                self.publication_title_hrefs.append(href)
             if self.nav_depth:
                 self.nav_hrefs.append(href)
         if tag == "link" and attributes.get("rel") == "stylesheet":
@@ -131,14 +146,23 @@ def main() -> int:
         if description not in notes_text:
             failures.append(f"独立 Notes 页文案不符：{description}")
 
-    publications_source = (ROOT / "publications.html").read_text(encoding="utf-8")
+    publications_page = ROOT / "publications.html"
+    publications = parse(publications_page)
+    publications_source = publications_page.read_text(encoding="utf-8")
     if publications_source.count('class="publication-detail"') != 3:
         failures.append("独立 Publications 页应展示 3 篇详细条目")
     if publications_source.count('class="publication-abstract"') != 3:
         failures.append("独立 Publications 页每篇文章都应包含摘要")
-    for doi in ("rl1f-ptzq", "2rfb-j778", "pk8h-xlld"):
-        if doi not in publications_source:
-            failures.append(f"独立 Publications 页缺少 DOI：{doi}")
+    publications_text = " ".join(publications.all_text)
+    if PUBLICATIONS_INTRO in publications_text:
+        failures.append("独立 Publications 页不应保留旧导语")
+    if GOOGLE_SCHOLAR_URL not in publications.hrefs or "Google Scholar" not in publications_text:
+        failures.append("独立 Publications 页缺少 Google Scholar 主页入口")
+    unexpected_doi_links = [url for url in DOI_LINK_URLS if url in publications.hrefs]
+    if unexpected_doi_links:
+        failures.append(f"独立 Publications 页仍保留 DOI 链接：{unexpected_doi_links}")
+    if publications.publication_title_hrefs != APS_PUBLICATION_URLS:
+        failures.append(f"论文标题 APS 链接不符：{publications.publication_title_hrefs}")
 
     actual_pages = [ROOT / "index.html"]
     actual_pages.extend(
@@ -177,6 +201,8 @@ def main() -> int:
             ".profile-card",
             ".profile-school",
             ".site-context",
+            ".publication-header",
+            ".scholar-link",
             "white-space: nowrap",
             ":focus-visible",
             "@media (max-width: 760px)",

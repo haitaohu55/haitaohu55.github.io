@@ -236,7 +236,8 @@ p {
 
 main > section > h1,
 main > .content-card > h1,
-.note-card > h1 {
+.note-card > h1,
+.publication-header h1 {
   margin-bottom: 10px;
   font-family: var(--font-display);
   font-size: clamp(28px, 4vw, 34px);
@@ -327,8 +328,30 @@ li + li {
   line-height: 1.55;
 }
 
+.publication-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 16px;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--color-line);
+}
+
+.publication-header h1 {
+  margin-bottom: 0;
+}
+
+.scholar-link {
+  flex: 0 0 auto;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
 .publication-details {
-  margin-top: 6px;
+  margin-top: 0;
 }
 
 .publication-detail {
