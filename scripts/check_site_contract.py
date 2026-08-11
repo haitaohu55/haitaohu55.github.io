@@ -43,6 +43,65 @@ DOI_LINK_URLS = [
     "https://doi.org/10.1103/2rfb-j778",
     "https://doi.org/10.1103/pk8h-xlld",
 ]
+EXPECTED_PALETTE = {
+    "--color-header": "#f5f5f7",
+    "--color-header-ink": "#1d1d1f",
+    "--color-header-muted": "#6e6e73",
+    "--color-paper": "#ffffff",
+    "--color-canvas": "#f5f5f7",
+    "--color-ink": "#1d1d1f",
+    "--color-secondary-ink": "#515154",
+    "--color-muted": "#6e6e73",
+    "--color-line": "#d2d2d7",
+    "--color-accent": "#0066cc",
+    "--color-accent-dark": "#004a99",
+    "--color-header-line": "#d2d2d7",
+}
+EXPECTED_SHADOW = "--shadow-paper: 0 8px 24px rgba(29, 29, 31, 0.05);"
+FORBIDDEN_PALETTE_COLORS = {
+    "#e8f0f2",
+    "#1f343b",
+    "#596c73",
+    "#f4f6f6",
+    "#242b30",
+    "#66727a",
+    "#dce4e6",
+    "#206a7a",
+    "#174f5b",
+    "#cbd9dd",
+    "#69a7b7",
+    "#4f5c63",
+    "#f7f9fa",
+    "#f6f8fa",
+}
+CONTRAST_CASES = [
+    ("主文字 / 白色表面", "#1d1d1f", "#ffffff", 4.5),
+    ("次文字 / 白色表面", "#515154", "#ffffff", 4.5),
+    ("弱文字 / 白色表面", "#6e6e73", "#ffffff", 4.5),
+    ("弱文字 / 中性画布", "#6e6e73", "#f5f5f7", 4.5),
+    ("交互蓝 / 白色表面", "#0066cc", "#ffffff", 4.5),
+    ("交互蓝 / 中性画布", "#0066cc", "#f5f5f7", 4.5),
+]
+
+
+def relative_luminance(color: str) -> float:
+    channels = [int(color[index : index + 2], 16) / 255 for index in (1, 3, 5)]
+
+    def linearize(channel: float) -> float:
+        if channel <= 0.04045:
+            return channel / 12.92
+        return ((channel + 0.055) / 1.055) ** 2.4
+
+    red, green, blue = (linearize(channel) for channel in channels)
+    return 0.2126 * red + 0.7152 * green + 0.0722 * blue
+
+
+def contrast_ratio(foreground: str, background: str) -> float:
+    lighter, darker = sorted(
+        (relative_luminance(foreground), relative_luminance(background)),
+        reverse=True,
+    )
+    return (lighter + 0.05) / (darker + 0.05)
 
 
 class PageParser(HTMLParser):
@@ -194,6 +253,7 @@ def main() -> int:
         failures.append("缺少共享样式：assets/site.css")
     else:
         source = css.read_text(encoding="utf-8")
+        source_lower = source.lower()
         for marker in (
             "--color-header",
             "--font-body",
@@ -210,6 +270,20 @@ def main() -> int:
         ):
             if marker not in source:
                 failures.append(f"共享样式缺少：{marker}")
+        for token, color in EXPECTED_PALETTE.items():
+            declaration = f"{token}: {color};"
+            if declaration not in source_lower:
+                failures.append(f"共享样式色板不符：{declaration}")
+        if EXPECTED_SHADOW not in source_lower:
+            failures.append(f"共享样式阴影不符：{EXPECTED_SHADOW}")
+        for color in sorted(FORBIDDEN_PALETTE_COLORS):
+            if color in source_lower:
+                failures.append(f"共享样式仍包含旧色：{color}")
+
+    for label, foreground, background, minimum in CONTRAST_CASES:
+        ratio = contrast_ratio(foreground, background)
+        if ratio < minimum:
+            failures.append(f"颜色对比度不足：{label} 为 {ratio:.2f}:1，要求至少 {minimum}:1")
 
     if failures:
         print("SITE CONTRACT: FAIL")
