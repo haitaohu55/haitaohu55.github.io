@@ -13,20 +13,23 @@ REQUIRED_ROOT_PAGES = {
     "index.html",
     "notes.html",
     "publications.html",
-    "contact.html",
 }
-HOME_NAV = ["notes.html", "publications.html", "contact.html"]
+FORBIDDEN_ROOT_PAGES = {"contact.html"}
+HOME_NAV = ["notes.html", "publications.html", "#contact"]
 HOME_SECTIONS = ["about", "notes", "publications", "contact"]
 PROFILE_LINES = [
     "Haitao Hu",
-    "Ph.D. in Condensed Matter Theory",
+    "Ph.D. in Condensed Matter Physics",
     "University of Science and Technology of China",
 ]
 PRESERVED_RESEARCH_ITEMS = [
     "Anderson localization in quasiperiodic systems",
     "Electronic structure and band topology of 2D materials",
-    "Hidden symmetry and topological phase transitions in 2D materials",
-    "First-principles study of 2D (anti)ferroelectric materials",
+]
+SHORT_NOTE_DESCRIPTIONS = [
+    "Short notes on first-principles calculations.",
+    "Short notes on tight-binding calculations.",
+    "Other short notes.",
 ]
 
 
@@ -101,6 +104,9 @@ def main() -> int:
     for relative in sorted(REQUIRED_ROOT_PAGES):
         if not (ROOT / relative).is_file():
             failures.append(f"缺少独立页面：{relative}")
+    for relative in sorted(FORBIDDEN_ROOT_PAGES):
+        if (ROOT / relative).exists():
+            failures.append(f"不应保留独立页面：{relative}")
 
     home = parse(ROOT / "index.html")
     if home.nav_hrefs != HOME_NAV:
@@ -113,6 +119,26 @@ def main() -> int:
     for item in PRESERVED_RESEARCH_ITEMS:
         if item not in home_text:
             failures.append(f"首页 About me 丢失原研究内容：{item}")
+    if "Current projects" in home_text:
+        failures.append("首页 About me 不应保留 Current projects")
+    if "Condensed Matter Physics · USTC" not in home_text:
+        failures.append("顶栏缺少研究方向与学校标识")
+
+    notes_text = " ".join(parse(ROOT / "notes.html").all_text)
+    for description in SHORT_NOTE_DESCRIPTIONS:
+        if description not in home_text:
+            failures.append(f"首页 Notes 文案不符：{description}")
+        if description not in notes_text:
+            failures.append(f"独立 Notes 页文案不符：{description}")
+
+    publications_source = (ROOT / "publications.html").read_text(encoding="utf-8")
+    if publications_source.count('class="publication-detail"') != 3:
+        failures.append("独立 Publications 页应展示 3 篇详细条目")
+    if publications_source.count('class="publication-abstract"') != 3:
+        failures.append("独立 Publications 页每篇文章都应包含摘要")
+    for doi in ("rl1f-ptzq", "2rfb-j778", "pk8h-xlld"):
+        if doi not in publications_source:
+            failures.append(f"独立 Publications 页缺少 DOI：{doi}")
 
     actual_pages = [ROOT / "index.html"]
     actual_pages.extend(
@@ -149,6 +175,9 @@ def main() -> int:
             "--font-body",
             ".home-layout",
             ".profile-card",
+            ".profile-school",
+            ".site-context",
+            "white-space: nowrap",
             ":focus-visible",
             "@media (max-width: 760px)",
             "prefers-reduced-motion",

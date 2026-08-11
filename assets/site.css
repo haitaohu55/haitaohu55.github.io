@@ -1,13 +1,15 @@
 :root {
-  --color-header: #151d25;
-  --color-header-muted: #b8c3cb;
+  --color-header: #e8f0f2;
+  --color-header-ink: #1f343b;
+  --color-header-muted: #596c73;
   --color-paper: #ffffff;
-  --color-canvas: #f3f5f6;
+  --color-canvas: #f4f6f6;
   --color-ink: #242b30;
   --color-muted: #66727a;
-  --color-line: #dfe5e8;
-  --color-accent: #28687a;
-  --color-accent-dark: #1e5261;
+  --color-line: #dce4e6;
+  --color-accent: #206a7a;
+  --color-accent-dark: #174f5b;
+  --color-header-line: #cbd9dd;
   --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif;
   --font-display: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
   --shadow-paper: 0 8px 24px rgba(21, 29, 37, 0.045);
@@ -56,14 +58,14 @@ header {
   top: 0;
   z-index: 20;
   padding: 0;
-  color: #f6f8f9;
+  color: var(--color-header-ink);
   background: var(--color-header);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid var(--color-header-line);
 }
 
 .nav-container {
-  width: min(100% - 40px, 1040px);
-  min-height: 66px;
+  width: min(100% - 40px, 1120px);
+  min-height: 54px;
   margin: 0 auto;
   padding: 0;
   display: flex;
@@ -72,10 +74,17 @@ header {
   gap: 12px 32px;
 }
 
+.site-identity {
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 13px;
+}
+
 .site-title {
   flex: 0 0 auto;
-  color: #f7f9fa;
-  font-size: 18px;
+  color: var(--color-header-ink);
+  font-size: 17px;
   font-weight: 650;
   letter-spacing: 0.01em;
 }
@@ -85,8 +94,17 @@ header {
 }
 
 .site-title a:hover {
-  color: #ffffff;
+  color: var(--color-accent-dark);
   text-decoration: none;
+}
+
+.site-context {
+  overflow: hidden;
+  color: var(--color-header-muted);
+  font-size: 12px;
+  letter-spacing: 0.015em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 nav {
@@ -103,19 +121,19 @@ nav a,
 }
 
 nav a {
-  padding: 21px 0 18px;
+  padding: 16px 0 14px;
   border-bottom: 2px solid transparent;
 }
 
 nav a:hover,
 nav a[aria-current="page"],
 .breadcrumbs a:hover {
-  color: #ffffff;
+  color: var(--color-header-ink);
   text-decoration: none;
 }
 
 nav a[aria-current="page"] {
-  border-bottom-color: #75aeba;
+  border-bottom-color: var(--color-accent);
 }
 
 main {
@@ -125,9 +143,9 @@ main {
 }
 
 main.home-layout {
-  width: min(100% - 40px, 1040px);
+  width: min(100% - 40px, 1120px);
   display: grid;
-  grid-template-columns: minmax(210px, 248px) minmax(0, 1fr);
+  grid-template-columns: 336px minmax(0, 1fr);
   gap: 28px;
   align-items: start;
 }
@@ -147,8 +165,8 @@ section,
 
 .profile-card {
   position: sticky;
-  top: 94px;
-  padding: 28px 25px;
+  top: 82px;
+  padding: 28px 22px;
 }
 
 .profile-card h1 {
@@ -177,14 +195,16 @@ section,
   font-weight: 560;
 }
 
+.profile-card .degree,
+.profile-school {
+  white-space: nowrap;
+}
+
 .home-content {
   min-width: 0;
 }
 
 .about-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 24px;
   margin-top: 22px;
   padding-top: 20px;
   border-top: 1px solid var(--color-line);
@@ -307,6 +327,69 @@ li + li {
   line-height: 1.55;
 }
 
+.publication-details {
+  margin-top: 6px;
+}
+
+.publication-detail {
+  padding: 24px 0;
+  border-top: 1px solid var(--color-line);
+}
+
+.publication-detail:first-child {
+  padding-top: 4px;
+  border-top: 0;
+}
+
+.publication-detail:last-child {
+  padding-bottom: 0;
+}
+
+.publication-detail .publication-title {
+  display: inline-block;
+  max-width: 68ch;
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 600;
+  line-height: 1.36;
+  letter-spacing: -0.01em;
+}
+
+.publication-authors {
+  margin: 8px 0 2px;
+  color: var(--color-ink);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.publication-detail .publication-meta {
+  margin-top: 0;
+}
+
+.publication-abstract {
+  max-width: 74ch;
+  margin-top: 16px;
+  padding-left: 17px;
+  border-left: 2px solid var(--color-header-line);
+}
+
+.publication-abstract h2 {
+  margin: 0 0 5px;
+  padding: 0;
+  color: var(--color-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  border: 0;
+}
+
+.publication-abstract p {
+  color: #4f5c63;
+  font-size: 14px;
+  line-height: 1.68;
+}
+
 .section-link {
   display: inline-flex;
   margin-top: 16px;
@@ -405,7 +488,7 @@ footer {
   }
 
   .nav-container {
-    width: min(100% - 28px, 1040px);
+    width: min(100% - 28px, 1120px);
     min-height: 58px;
     flex-wrap: wrap;
     gap: 0 18px;
@@ -440,11 +523,6 @@ footer {
     margin-bottom: 20px;
   }
 
-  .about-grid {
-    grid-template-columns: 1fr;
-    gap: 18px;
-  }
-
   .profile-card,
   section,
   .note-card,
@@ -464,6 +542,40 @@ footer {
     padding-top: 10px;
   }
 
+  .nav-container-primary {
+    min-height: 52px;
+    align-items: center;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 12px;
+    padding: 0;
+  }
+
+  .nav-container-primary .site-title {
+    font-size: 16px;
+  }
+
+  .nav-container-primary nav {
+    width: auto;
+    gap: 12px;
+    overflow: visible;
+  }
+
+  .nav-container-primary nav a {
+    min-height: 44px;
+    padding: 13px 0 11px;
+    font-size: 12px;
+  }
+
+  .nav-container-primary .site-context {
+    display: none;
+  }
+
+  main,
+  main.home-layout {
+    width: calc(100% - 24px);
+  }
+
   nav {
     width: 100%;
     overflow-x: auto;
@@ -474,8 +586,13 @@ footer {
   section,
   .note-card,
   .content-card {
-    padding: 19px 18px;
+    padding: 19px 14px;
     border-radius: 7px;
+  }
+
+  .profile-school {
+    font-size: 12px !important;
+    letter-spacing: -0.012em;
   }
 
   .note-card pre,
