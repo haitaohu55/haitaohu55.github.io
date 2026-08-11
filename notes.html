@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Notes - Haitao Hu</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Physics and computational notes by Haitao Hu." />
+  <link rel="stylesheet" href="assets/site.css" />
+</head>
+
+<body>
+  <header>
+    <div class="nav-container">
+      <div class="site-title"><a href="index.html">Haitao Hu</a></div>
+      <nav aria-label="Primary navigation">
+        <a href="notes.html" aria-current="page">Notes</a>
+        <a href="publications.html">Publications</a>
+        <a href="contact.html">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section>
+      <h1>Notes</h1>
+      <p class="page-intro">
+        Working notes on electronic-structure calculations, tight-binding models,
+        and the tools I use in research.
+      </p>
+      <ul class="link-list">
+        <li>
+          <a href="notes/dft/index.html">DFT calculations</a>
+          <p>VASP workflows, structure optimization, phonons, and related tools.</p>
+        </li>
+        <li>
+          <a href="notes/tb/index.html">Tight-binding calculations</a>
+          <p>Second quantization, exact diagonalization, Monte Carlo, and quasiperiodic models.</p>
+        </li>
+        <li>
+          <a href="notes/other/index.html">Other notes</a>
+          <p>Git and other practical references.</p>
+        </li>
+      </ul>
+    </section>
+  </main>
+
+  <footer>© <span id="year"></span> Haitao Hu</footer>
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
