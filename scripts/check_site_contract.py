@@ -22,6 +22,15 @@ PROFILE_LINES = [
     "Ph.D. in Condensed Matter Physics",
     "University of Science and Technology of China",
 ]
+PROFILE_PHOTO_SRC = "figs/fig1.jpg"
+NOTE_TYPOGRAPHY_MARKERS = [
+    ".profile-photo",
+    ".toc a",
+    ".note-card h3",
+    ".note-card :not(pre) > code",
+    ".note-card table",
+    ".note-card blockquote",
+]
 PRESERVED_RESEARCH_ITEMS = [
     "Anderson localization in quasiperiodic systems",
     "Electronic structure and band topology of 2D materials",
@@ -114,7 +123,9 @@ class PageParser(HTMLParser):
         self.nav_hrefs: list[str] = []
         self.profile_depth = 0
         self.profile_text: list[str] = []
+        self.profile_images: list[dict[str, str]] = []
         self.publication_title_hrefs: list[str] = []
+        self.images: list[dict[str, str]] = []
         self.all_text: list[str] = []
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
@@ -135,6 +146,15 @@ class PageParser(HTMLParser):
             href = attributes.get("href")
             if href:
                 self.stylesheets.append(href)
+        if tag == "img":
+            image = {
+                "src": attributes.get("src") or "",
+                "alt": attributes.get("alt") or "",
+                "class": attributes.get("class") or "",
+            }
+            self.images.append(image)
+            if self.profile_depth:
+                self.profile_images.append(image)
         if tag == "section" and attributes.get("id"):
             self.section_ids.append(attributes["id"] or "")
 
@@ -189,6 +209,24 @@ def main() -> int:
         failures.append(f"首页区块应为 {HOME_SECTIONS}，实际为 {home.section_ids}")
     if home.profile_text != PROFILE_LINES:
         failures.append(f"左侧身份信息不符：{home.profile_text}")
+    profile_photos = [
+        image for image in home.images if "profile-photo" in image["class"].split()
+    ]
+    profile_card_photos = [
+        image for image in home.profile_images if "profile-photo" in image["class"].split()
+    ]
+    if len(profile_photos) != 1:
+        failures.append(f"首页应有且仅有一张 profile-photo，实际为 {len(profile_photos)} 张")
+    elif len(profile_card_photos) != 1:
+        failures.append("首页照片必须位于左侧 profile-card 内")
+    elif profile_photos[0]["src"] != PROFILE_PHOTO_SRC or not profile_photos[0]["alt"].strip():
+        failures.append(f"首页照片路径或替代文本不符：{profile_photos[0]}")
+
+    profile_photo = ROOT / PROFILE_PHOTO_SRC
+    if not profile_photo.is_file():
+        failures.append(f"缺少浏览器兼容的首页照片：{PROFILE_PHOTO_SRC}")
+    elif not profile_photo.read_bytes().startswith(b"\xff\xd8\xff"):
+        failures.append(f"首页照片不是有效 JPEG：{PROFILE_PHOTO_SRC}")
     home_text = " ".join(home.all_text)
     for item in PRESERVED_RESEARCH_ITEMS:
         if item not in home_text:
@@ -234,6 +272,9 @@ def main() -> int:
     for page in actual_pages:
         parsed = parse(page)
         relative = page.relative_to(ROOT)
+        is_note_page = relative == Path("notes.html") or "notes" in relative.parts
+        if is_note_page and "fig1" in page.read_text(encoding="utf-8").lower():
+            failures.append(f"笔记页不应引用首页照片：{relative}")
         if page.name == "note_page.html" and page.parent.name == "templates":
             if "../../assets/site.css" not in parsed.stylesheets:
                 failures.append("笔记模板未引用生成页面所需的共享样式")
@@ -254,6 +295,8 @@ def main() -> int:
     else:
         source = css.read_text(encoding="utf-8")
         source_lower = source.lower()
+        if "fig1" in source_lower:
+            failures.append("共享样式不应通过背景图等方式向笔记页注入首页照片")
         for marker in (
             "--color-header",
             "--font-body",
@@ -270,6 +313,9 @@ def main() -> int:
         ):
             if marker not in source:
                 failures.append(f"共享样式缺少：{marker}")
+        for marker in NOTE_TYPOGRAPHY_MARKERS:
+            if marker not in source:
+                failures.append(f"共享样式缺少照片/笔记排版规则：{marker}")
         for token, color in EXPECTED_PALETTE.items():
             declaration = f"{token}: {color};"
             if declaration not in source_lower:
