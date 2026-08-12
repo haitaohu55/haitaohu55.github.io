@@ -68,8 +68,10 @@ EXPECTED_PALETTE = {
 }
 EXPECTED_SHADOW = "--shadow-paper: 0 8px 24px rgba(29, 29, 31, 0.05);"
 EXPECTED_PROFILE_CROP_DECLARATIONS = [
-    "aspect-ratio: 6 / 5;",
+    "width: min(100%, 230px);",
+    "aspect-ratio: 1 / 1;",
     "object-position: 55% 100%;",
+    "border-radius: 50%;",
     "max-width: 520px;",
 ]
 FORBIDDEN_PALETTE_COLORS = {
