@@ -68,11 +68,14 @@ EXPECTED_PALETTE = {
 }
 EXPECTED_SHADOW = "--shadow-paper: 0 8px 24px rgba(29, 29, 31, 0.05);"
 EXPECTED_PROFILE_CROP_DECLARATIONS = [
-    "width: min(100%, 230px);",
+    "grid-template-columns: 280px minmax(0, 1fr);",
+    "width: min(100%, 136px);",
     "aspect-ratio: 1 / 1;",
     "object-position: 55% 100%;",
     "border-radius: 50%;",
-    "max-width: 520px;",
+    "@media (max-width: 900px)",
+    "grid-template-columns: 104px minmax(0, 1fr);",
+    "font-size: clamp(24px, 2.1vw, 26px);",
 ]
 FORBIDDEN_PALETTE_COLORS = {
     "#e8f0f2",
@@ -334,6 +337,8 @@ def main() -> int:
                 failures.append(f"首页照片裁剪规则不符：{declaration}")
         if "aspect-ratio: 16 / 9;" in source:
             failures.append("移动端首页照片不应继续使用会丢失下半部分的 16:9 裁剪")
+        if "width: min(100%, 230px);" in source:
+            failures.append("首页圆形头像不应继续使用压过正文的 230px 尺寸")
         for color in sorted(FORBIDDEN_PALETTE_COLORS):
             if color in source_lower:
                 failures.append(f"共享样式仍包含旧色：{color}")
