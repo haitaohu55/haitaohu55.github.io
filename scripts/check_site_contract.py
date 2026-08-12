@@ -67,6 +67,11 @@ EXPECTED_PALETTE = {
     "--color-header-line": "#d2d2d7",
 }
 EXPECTED_SHADOW = "--shadow-paper: 0 8px 24px rgba(29, 29, 31, 0.05);"
+EXPECTED_PROFILE_CROP_DECLARATIONS = [
+    "aspect-ratio: 6 / 5;",
+    "object-position: 55% 100%;",
+    "max-width: 520px;",
+]
 FORBIDDEN_PALETTE_COLORS = {
     "#e8f0f2",
     "#1f343b",
@@ -322,6 +327,11 @@ def main() -> int:
                 failures.append(f"共享样式色板不符：{declaration}")
         if EXPECTED_SHADOW not in source_lower:
             failures.append(f"共享样式阴影不符：{EXPECTED_SHADOW}")
+        for declaration in EXPECTED_PROFILE_CROP_DECLARATIONS:
+            if declaration not in source:
+                failures.append(f"首页照片裁剪规则不符：{declaration}")
+        if "aspect-ratio: 16 / 9;" in source:
+            failures.append("移动端首页照片不应继续使用会丢失下半部分的 16:9 裁剪")
         for color in sorted(FORBIDDEN_PALETTE_COLORS):
             if color in source_lower:
                 failures.append(f"共享样式仍包含旧色：{color}")

@@ -173,10 +173,10 @@ section,
 .profile-photo {
   display: block;
   width: 100%;
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 6 / 5;
   margin: 0 0 22px;
   object-fit: cover;
-  object-position: 55% 69%;
+  object-position: 55% 100%;
   border-radius: 6px;
 }
 
@@ -680,12 +680,15 @@ footer {
 
   .profile-card {
     position: static;
+    max-width: 520px;
+    margin-right: auto;
     margin-bottom: 20px;
+    margin-left: auto;
   }
 
   .profile-card .profile-photo {
-    aspect-ratio: 16 / 9;
-    object-position: 55% 66%;
+    aspect-ratio: 6 / 5;
+    object-position: 55% 100%;
   }
 
   .profile-card,
