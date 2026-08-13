@@ -34,6 +34,7 @@ NOTE_TYPOGRAPHY_MARKERS = [
     ".notes-more",
     ".toc a",
     ".note-card h3",
+    ".note-card > h2:first-of-type",
     ".note-card :not(pre) > code",
     ".note-card table",
     ".note-card blockquote",
@@ -645,7 +646,9 @@ def main() -> int:
             ".note-nav",
             ".language-options",
             ".note-pagination",
+            ".note-pagination a",
             ".note-neighbor",
+            ".note-neighbor__title",
             ".math-viewport",
         ):
             if marker not in source:

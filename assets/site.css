@@ -556,8 +556,7 @@ li + li {
 
 .note-meta {
   max-width: 68ch;
-  margin-bottom: 24px;
-  padding-bottom: 16px;
+  margin-bottom: 0;
   display: flex;
   align-items: center;
   justify-content: flex-start;
@@ -565,7 +564,6 @@ li + li {
   color: var(--color-muted);
   font-size: 12px;
   line-height: 1.6;
-  border-bottom: 1px solid var(--color-line);
 }
 
 .language-menu {
@@ -720,6 +718,13 @@ header .language-menu {
   border-left: 0;
 }
 
+.note-card > h2:first-of-type,
+.note-content > h2:first-of-type {
+  margin-top: 36px;
+  padding-top: 0;
+  border-top: 0;
+}
+
 .note-card h3,
 .note-content h3 {
   margin-top: 28px;
@@ -863,16 +868,25 @@ header .language-menu {
   margin-top: 48px;
   padding-top: 20px;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-  gap: 18px;
-  align-items: start;
+  grid-template-columns: minmax(0, 1fr) minmax(104px, auto) minmax(0, 1fr);
+  gap: clamp(16px, 3vw, 32px);
+  align-items: stretch;
   border-top: 1px solid var(--color-line);
 }
 
 .note-neighbor {
   min-width: 0;
+  min-height: 60px;
   display: grid;
-  gap: 3px;
+  grid-template-rows: auto 1fr;
+  gap: 4px;
+  align-content: start;
+}
+
+.note-pagination a {
+  margin-left: 0;
+  padding: 0;
+  border-bottom: 0;
 }
 
 .note-neighbor--next {
@@ -887,13 +901,15 @@ header .language-menu {
 }
 
 .note-neighbor__title {
+  min-height: 2.9em;
   overflow: hidden;
   color: var(--color-ink);
-  font-family: var(--font-display);
-  font-size: 14px;
-  line-height: 1.4;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  display: -webkit-box;
+  font-size: 13px;
+  font-weight: 540;
+  line-height: 1.45;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .note-neighbor:hover {
@@ -905,7 +921,8 @@ header .language-menu {
 }
 
 .note-pagination__exits {
-  padding-top: 2px;
+  align-self: center;
+  justify-self: center;
   display: flex;
   gap: 12px;
   font-size: 11px;
