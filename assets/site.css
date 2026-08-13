@@ -368,6 +368,72 @@ li + li {
   line-height: 1.55;
 }
 
+.home-notes-directory {
+  margin-top: 1px;
+}
+
+.home-notes-category {
+  padding: 18px 0 19px;
+  border-top: 1px solid var(--color-line);
+}
+
+.home-notes-category:first-child {
+  padding-top: 2px;
+  border-top: 0;
+}
+
+.home-notes-category-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.home-notes-category-heading h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 620;
+}
+
+.home-notes-description {
+  margin: 3px 0 10px;
+  color: var(--color-muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.home-notes-list {
+  display: grid;
+  gap: 5px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.home-notes-list li,
+.home-notes-list li + li {
+  margin: 0;
+}
+
+.home-notes-list a {
+  color: var(--color-secondary-ink);
+  font-size: 12px;
+  font-weight: 520;
+  line-height: 1.48;
+  text-decoration-color: transparent;
+}
+
+.home-notes-list a::before {
+  content: "—";
+  margin-right: 7px;
+  color: var(--color-line);
+}
+
+.home-notes-list a:hover {
+  color: var(--color-accent-dark);
+  text-decoration-color: currentColor;
+}
+
 #publications .publication-title {
   display: inline-block;
   max-width: 68ch;

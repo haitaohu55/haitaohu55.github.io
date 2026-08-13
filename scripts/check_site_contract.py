@@ -55,6 +55,15 @@ SHORT_NOTE_DESCRIPTIONS = [
     "Short notes on tight-binding calculations.",
     "Other short notes.",
 ]
+HOME_NOTE_PREVIEWS = [
+    ("notes/dft/phonon-spectrum.en.html", "Phonon Spectrum Calculation"),
+    ("notes/dft/linux.en.html", "Some common Linux commands"),
+    ("notes/dft/opt.html", "Structure Optimization using VASP"),
+    ("notes/tb/准周期2.en.html", "Quasiperiodic Systems II"),
+    ("notes/tb/准周期1.en.html", "Quasiperiodic Systems I"),
+    ("notes/tb/二次量子化.en.html", "Second Quantization"),
+    ("notes/other/git.en.html", "git"),
+]
 NOTES_PREVIEW_LIMIT = 3
 NOTES_CATEGORIES = {
     "dft": Path("notes/dft/index.html"),
@@ -438,6 +447,14 @@ def main() -> int:
             failures.append(f"首页 Notes 文案不符：{description}")
         if description in notes_text:
             failures.append(f"独立 Notes 页不应保留重复说明：{description}")
+    for href, title in HOME_NOTE_PREVIEWS:
+        if href not in home.hrefs or title not in home_text:
+            failures.append(f"首页 Notes 缺少代表笔记：{title} -> {href}")
+    home_source = (ROOT / "index.html").read_text(encoding="utf-8")
+    if "home-notes-directory" not in home_source:
+        failures.append("首页 Notes 缺少紧凑分类预览结构")
+    if "notes-date" in home_source or "Read note" in home_text:
+        failures.append("首页 Notes 不应复制完整目录的日期或阅读操作")
     for category, category_index in NOTES_CATEGORIES.items():
         category_hrefs = managed_note_hrefs(ROOT / category_index)
         expected_preview = [
