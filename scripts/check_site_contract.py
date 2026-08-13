@@ -480,6 +480,7 @@ def main() -> int:
             (original_relative, original),
             (translated_relative, translated),
         ):
+            page_source = (ROOT / relative).read_text(encoding="utf-8")
             if page.time_values != [
                 ({"id": "published-date", "datetime": published}, published)
             ]:
@@ -492,6 +493,14 @@ def main() -> int:
                 failures.append(f"笔记顶部分类链接未使用安全相对路径：{relative}")
             if any(href.startswith("/") for href in page.hrefs):
                 failures.append(f"笔记仍包含环境相关的根路径链接：{relative}")
+            if 'class="nav-container note-nav"' not in page_source:
+                failures.append(f"笔记顶部缺少三段式导航结构：{relative}")
+            header_source = page_source.split("</header>", 1)[0]
+            article_source = page_source.split('<article class="note-card">', 1)[-1]
+            if 'class="language-menu"' not in header_source:
+                failures.append(f"语言菜单未放在顶部导航：{relative}")
+            if 'class="language-menu"' in article_source:
+                failures.append(f"正文标题旁仍残留语言菜单：{relative}")
 
         if original.h2_ids != translated.h2_ids:
             failures.append(f"双语笔记章节锚点不一致：{original_relative}")
@@ -633,6 +642,7 @@ def main() -> int:
             "position: sticky",
             ".language-switch",
             ".language-menu",
+            ".note-nav",
             ".language-options",
             ".note-pagination",
             ".note-neighbor",

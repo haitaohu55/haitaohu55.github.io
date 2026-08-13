@@ -89,16 +89,22 @@
     updateAlternateHref();
     window.addEventListener("hashchange", updateAlternateHref);
 
-    const title = article ? article.querySelector("h1") : null;
-    if (title && !article.querySelector(".language-menu")) {
-      let heading = title.closest(".note-heading");
-      if (!heading) {
-        heading = document.createElement("div");
-        heading.className = "note-heading";
-        title.before(heading);
-        heading.appendChild(title);
+    const headerContainer = document.querySelector("header .nav-container");
+    if (headerContainer) {
+      headerContainer.classList.add("note-nav");
+    }
+    const existingMenu = document.querySelector(".language-menu");
+    if (headerContainer && existingMenu && existingMenu.parentElement !== headerContainer) {
+      headerContainer.appendChild(existingMenu);
+    }
+    const legacyHeading = article ? article.querySelector(".note-heading") : null;
+    if (legacyHeading) {
+      const title = legacyHeading.querySelector("h1");
+      if (title) {
+        legacyHeading.replaceWith(title);
       }
-
+    }
+    if (headerContainer && !headerContainer.querySelector(".language-menu")) {
       const menu = document.createElement("details");
       menu.className = "language-menu";
       const menuButton = document.createElement("summary");
@@ -123,7 +129,7 @@
         options.append(languageSwitch, makeCurrentOption("English", "en"));
       }
       menu.append(menuButton, options);
-      heading.appendChild(menu);
+      headerContainer.appendChild(menu);
 
       document.addEventListener("click", (event) => {
         if (menu.open && !menu.contains(event.target)) {
@@ -137,7 +143,7 @@
         }
       });
     }
-    if (article && article.querySelector(".language-menu")) {
+    if (document.querySelector("header .language-menu")) {
       languageSwitch.textContent = isChinese ? "English" : "中文";
     }
   }

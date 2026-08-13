@@ -75,6 +75,18 @@ header {
   gap: 12px 32px;
 }
 
+.note-nav {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 0 24px;
+}
+
+.note-nav .breadcrumbs {
+  min-width: 0;
+  justify-self: end;
+  text-align: right;
+}
+
 .site-identity {
   min-width: 0;
   display: flex;
@@ -526,19 +538,6 @@ li + li {
   padding: clamp(26px, 4.5vw, 42px) clamp(22px, 6vw, 54px);
 }
 
-.note-heading {
-  max-width: 68ch;
-  margin-bottom: 8px;
-  display: flex;
-  align-items: baseline;
-  gap: 11px;
-}
-
-.note-heading h1 {
-  min-width: 0;
-  margin-bottom: 0;
-}
-
 .note-card > p,
 .note-content {
   max-width: 68ch;
@@ -575,14 +574,29 @@ li + li {
   flex: 0 0 auto;
 }
 
+header .language-menu {
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+}
+
 .language-menu summary {
-  padding: 3px 0;
-  color: var(--color-muted);
-  font-size: 12px;
-  font-weight: 600;
+  padding: 17px 0 15px;
+  color: var(--color-header-muted);
+  font-size: 13px;
+  font-weight: 500;
   line-height: 1.4;
   list-style: none;
   cursor: pointer;
+}
+
+.language-menu summary:focus {
+  outline: none;
+}
+
+.language-menu summary:focus-visible {
+  outline: none;
+  box-shadow: inset 0 -2px var(--color-accent);
 }
 
 .language-menu summary::-webkit-details-marker {
@@ -590,9 +604,14 @@ li + li {
 }
 
 .language-menu summary::after {
-  content: "⌄";
-  margin-left: 5px;
-  font-size: 10px;
+  content: "";
+  width: 5px;
+  height: 5px;
+  margin: 0 0 3px 7px;
+  display: inline-block;
+  border-right: 1px solid currentColor;
+  border-bottom: 1px solid currentColor;
+  transform: rotate(45deg);
 }
 
 .language-menu[open] summary,
@@ -605,13 +624,13 @@ li + li {
   position: absolute;
   top: calc(100% + 7px);
   right: 0;
-  min-width: 112px;
-  padding: 5px;
+  min-width: 116px;
+  padding: 6px;
   display: grid;
   background: var(--color-paper);
   border: 1px solid var(--color-line);
-  border-radius: 7px;
-  box-shadow: 0 8px 24px rgba(29, 29, 31, 0.12);
+  border-radius: 8px;
+  box-shadow: 0 10px 28px rgba(29, 29, 31, 0.11);
 }
 
 .language-option,
@@ -1017,8 +1036,19 @@ footer {
   }
 
   .breadcrumbs {
-    width: 100%;
-    order: 2;
+    min-width: 0;
+    margin-left: auto;
+    text-align: right;
+  }
+
+  header .language-menu {
+    margin-left: 0;
+  }
+
+  .note-nav {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 0 16px;
   }
 
   main,
@@ -1038,15 +1068,9 @@ footer {
     padding: 21px 22px;
   }
 
-  .note-heading {
-    align-items: center;
-    flex-wrap: wrap;
-    row-gap: 2px;
-  }
-
   .language-options {
-    right: auto;
-    left: 0;
+    right: 0;
+    left: auto;
   }
 
   .note-pagination {
@@ -1070,6 +1094,41 @@ footer {
     align-items: flex-start;
     flex-direction: column;
     padding-top: 10px;
+  }
+
+  .note-nav {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0 14px;
+    align-items: center;
+    flex-direction: initial;
+    padding: 8px 0 7px;
+  }
+
+  .note-nav .site-title {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .note-nav .language-menu {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
+  }
+
+  .note-nav .language-menu summary {
+    padding: 8px 0 7px;
+  }
+
+  .note-nav .breadcrumbs {
+    width: 100%;
+    grid-column: 1 / -1;
+    grid-row: 2;
+    justify-self: stretch;
+    margin: 2px 0 0;
+    padding-top: 6px;
+    text-align: left;
+    border-top: 1px solid rgba(29, 29, 31, 0.07);
   }
 
   .nav-container-primary {
