@@ -25,6 +25,10 @@ PROFILE_LINES = [
 PROFILE_PHOTO_SRC = "figs/fig1.jpg"
 NOTE_TYPOGRAPHY_MARKERS = [
     ".profile-photo",
+    ".notes-directory",
+    ".notes-category h2",
+    ".notes-preview-list h3",
+    ".notes-more",
     ".toc a",
     ".note-card h3",
     ".note-card :not(pre) > code",
@@ -40,6 +44,12 @@ SHORT_NOTE_DESCRIPTIONS = [
     "Short notes on tight-binding calculations.",
     "Other short notes.",
 ]
+NOTES_PREVIEW_LIMIT = 3
+NOTES_CATEGORIES = {
+    "dft": Path("notes/dft/index.html"),
+    "tb": Path("notes/tb/index.html"),
+    "other": Path("notes/other/index.html"),
+}
 PUBLICATIONS_INTRO = "Selected work in quasiperiodic systems and localization, with brief abstracts."
 GOOGLE_SCHOLAR_URL = "https://scholar.google.com.hk/citations?hl=zh-CN&user=51eUsJkAAAAJ"
 APS_PUBLICATION_URLS = [
@@ -135,6 +145,10 @@ class PageParser(HTMLParser):
         self.profile_text: list[str] = []
         self.profile_images: list[dict[str, str]] = []
         self.publication_title_hrefs: list[str] = []
+        self.heading_level = 0
+        self.notes_category: str | None = None
+        self.notes_preview_links: dict[str, list[tuple[str, int]]] = {}
+        self.notes_more_hrefs: dict[str, list[str]] = {}
         self.images: list[dict[str, str]] = []
         self.all_text: list[str] = []
 
@@ -145,6 +159,12 @@ class PageParser(HTMLParser):
             self.nav_depth += 1
         if "profile-card" in classes:
             self.profile_depth += 1
+        if tag in {"h1", "h2", "h3", "h4", "h5", "h6"}:
+            self.heading_level = int(tag[1])
+        if tag == "article" and "notes-category" in classes:
+            self.notes_category = attributes.get("data-category") or ""
+            self.notes_preview_links.setdefault(self.notes_category, [])
+            self.notes_more_hrefs.setdefault(self.notes_category, [])
         if tag == "a" and attributes.get("href"):
             href = attributes["href"] or ""
             self.hrefs.append(href)
@@ -152,6 +172,12 @@ class PageParser(HTMLParser):
                 self.publication_title_hrefs.append(href)
             if self.nav_depth:
                 self.nav_hrefs.append(href)
+            if self.notes_category and "notes-preview-title" in classes:
+                self.notes_preview_links[self.notes_category].append(
+                    (href, self.heading_level)
+                )
+            if self.notes_category and "notes-more" in classes:
+                self.notes_more_hrefs[self.notes_category].append(href)
         if tag == "link" and attributes.get("rel") == "stylesheet":
             href = attributes.get("href")
             if href:
@@ -173,6 +199,10 @@ class PageParser(HTMLParser):
             self.nav_depth -= 1
         if tag in {"aside", "section"} and self.profile_depth:
             self.profile_depth -= 1
+        if tag in {"h1", "h2", "h3", "h4", "h5", "h6"}:
+            self.heading_level = 0
+        if tag == "article" and self.notes_category is not None:
+            self.notes_category = None
 
     def handle_data(self, data: str) -> None:
         value = " ".join(data.split())
@@ -200,6 +230,19 @@ def local_target(page: Path, href: str) -> Path | None:
     if raw_path.startswith("/"):
         return ROOT / raw_path.lstrip("/")
     return page.parent / raw_path
+
+
+def managed_note_hrefs(path: Path) -> list[str]:
+    source = path.read_text(encoding="utf-8")
+    start = "<!-- AUTO-NOTES:START -->"
+    end = "<!-- AUTO-NOTES:END -->"
+    if start not in source or end not in source:
+        return []
+    managed = source.split(start, 1)[1].split(end, 1)[0]
+    parser = PageParser()
+    parser.feed(managed)
+    parser.close()
+    return parser.hrefs
 
 
 def main() -> int:
@@ -246,12 +289,54 @@ def main() -> int:
     if "Condensed Matter Physics · USTC" not in home_text:
         failures.append("顶栏缺少研究方向与学校标识")
 
-    notes_text = " ".join(parse(ROOT / "notes.html").all_text)
+    notes = parse(ROOT / "notes.html")
+    notes_text = " ".join(notes.all_text)
     for description in SHORT_NOTE_DESCRIPTIONS:
         if description not in home_text:
             failures.append(f"首页 Notes 文案不符：{description}")
-        if description not in notes_text:
-            failures.append(f"独立 Notes 页文案不符：{description}")
+        if description in notes_text:
+            failures.append(f"独立 Notes 页不应保留重复说明：{description}")
+    for category, category_index in NOTES_CATEGORIES.items():
+        category_hrefs = managed_note_hrefs(ROOT / category_index)
+        expected_preview = [
+            (category_index.parent / href).as_posix()
+            for href in category_hrefs[:NOTES_PREVIEW_LIMIT]
+        ]
+        actual_preview = notes.notes_preview_links.get(category, [])
+        actual_hrefs = [href for href, _ in actual_preview]
+        if actual_hrefs != expected_preview:
+            failures.append(
+                f"Notes 页 {category} 预览应为 {expected_preview}，实际为 {actual_hrefs}"
+            )
+        if any(level != 3 for _, level in actual_preview):
+            failures.append(f"Notes 页 {category} 的具体笔记标题必须使用三级标题")
+        expected_more = (
+            [category_index.as_posix()]
+            if len(category_hrefs) > NOTES_PREVIEW_LIMIT
+            else []
+        )
+        actual_more = notes.notes_more_hrefs.get(category, [])
+        if actual_more != expected_more:
+            failures.append(
+                f"Notes 页 {category} 的 More … 规则不符：应为 {expected_more}，实际为 {actual_more}"
+            )
+    if set(notes.notes_preview_links) != set(NOTES_CATEGORIES):
+        failures.append(
+            f"Notes 页分类不符：{sorted(notes.notes_preview_links)}"
+        )
+
+    sync_script = ROOT / "scripts" / "sync_tex_note.py"
+    if not sync_script.is_file():
+        failures.append("缺少笔记同步脚本：scripts/sync_tex_note.py")
+    else:
+        sync_source = sync_script.read_text(encoding="utf-8")
+        for marker in (
+            "NOTES_PREVIEW_LIMIT = 3",
+            "def update_notes_overview()",
+            "overview_path = update_notes_overview()",
+        ):
+            if marker not in sync_source:
+                failures.append(f"笔记同步脚本缺少总览更新规则：{marker}")
 
     publications_page = ROOT / "publications.html"
     publications = parse(publications_page)
