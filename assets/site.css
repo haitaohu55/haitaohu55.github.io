@@ -392,7 +392,7 @@ li + li {
   color: var(--color-ink);
 }
 
-.home-notes-latest,
+.home-notes-entry,
 .home-notes-more {
   display: block;
   width: fit-content;
@@ -402,7 +402,12 @@ li + li {
   text-decoration-color: transparent;
 }
 
-.home-notes-latest {
+.home-notes-entries {
+  display: grid;
+  gap: 4px;
+}
+
+.home-notes-entry {
   color: var(--color-accent);
   font-weight: 540;
 }
@@ -414,7 +419,7 @@ li + li {
   letter-spacing: 0.12em;
 }
 
-.home-notes-latest:hover,
+.home-notes-entry:hover,
 .home-notes-more:hover {
   color: var(--color-accent-dark);
   text-decoration-color: currentColor;

@@ -55,17 +55,20 @@ SHORT_NOTE_DESCRIPTIONS = [
     "Short notes on tight-binding calculations.",
     "Other short notes.",
 ]
-HOME_LATEST_NOTES = [
-    ("notes/dft/phonon-spectrum.en.html", "Phonon Spectrum Calculation"),
-    ("notes/tb/准周期2.en.html", "Quasiperiodic Systems II"),
-    ("notes/other/git.en.html", "git"),
-]
-HOME_OLDER_PREVIEW_TITLES = [
-    "Some common Linux commands",
-    "Structure Optimization using VASP",
-    "Quasiperiodic Systems I",
-    "Second Quantization",
-]
+HOME_NOTE_PREVIEWS = {
+    "dft": [
+        ("notes/dft/phonon-spectrum.en.html", "Phonon Spectrum Calculation"),
+        ("notes/dft/linux.en.html", "Some common Linux commands"),
+        ("notes/dft/opt.html", "Structure Optimization using VASP"),
+    ],
+    "tb": [
+        ("notes/tb/准周期2.en.html", "Quasiperiodic Systems II"),
+        ("notes/tb/准周期1.en.html", "Quasiperiodic Systems I"),
+        ("notes/tb/二次量子化.en.html", "Second Quantization"),
+    ],
+    "other": [("notes/other/git.en.html", "git")],
+}
+HOME_MORE_CATEGORIES = {"tb"}
 NOTES_PREVIEW_LIMIT = 3
 NOTES_CATEGORIES = {
     "dft": Path("notes/dft/index.html"),
@@ -448,18 +451,22 @@ def main() -> int:
     for description in SHORT_NOTE_DESCRIPTIONS:
         if description in home_text or description in notes_text:
             failures.append(f"Notes 目录不应保留重复说明：{description}")
-    for href, title in HOME_LATEST_NOTES:
+    expected_home_previews = [
+        item for previews in HOME_NOTE_PREVIEWS.values() for item in previews
+    ]
+    for href, title in expected_home_previews:
         if href not in home.hrefs or title not in home_text:
-            failures.append(f"首页 Notes 缺少最新笔记：{title} -> {href}")
-    for title in HOME_OLDER_PREVIEW_TITLES:
-        if f">{title}</a>" in home_source:
-            failures.append(f"首页 Notes 不应继续展示较早笔记：{title}")
+            failures.append(f"首页 Notes 缺少预览笔记：{title} -> {href}")
     if "home-notes-directory" not in home_source:
         failures.append("首页 Notes 缺少紧凑分类预览结构")
-    if home_source.count('class="home-notes-latest"') != len(HOME_LATEST_NOTES):
-        failures.append("首页 Notes 每个分类应有且仅有一篇最新笔记")
-    if home_source.count('class="home-notes-more"') != len(NOTES_CATEGORIES):
-        failures.append("首页 Notes 每个分类应以省略号收束")
+    if home_source.count('class="home-notes-entry"') != len(expected_home_previews):
+        failures.append("首页 Notes 应为每类最多三篇的紧凑预览")
+    if home_source.count('class="home-notes-more"') != len(HOME_MORE_CATEGORIES):
+        failures.append("首页 Notes 只应在仍有更多笔记的分类显示省略号")
+    for category in NOTES_CATEGORIES:
+        marker = f'data-home-notes-category="{category}"'
+        if home_source.count(marker) != 1:
+            failures.append(f"首页 Notes 分类结构不符：{category}")
     if "notes-count" in home_source or "home-notes-description" in home_source:
         failures.append("首页 Notes 不应展示数量或分类说明")
     if "notes-date" in home_source or "Read note" in home_text:
