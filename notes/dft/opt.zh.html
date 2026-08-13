@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="en" data-note-alternate="opt.zh.html">
+<html lang="zh-CN" data-note-alternate="opt.html">
 <head>
   <meta charset="UTF-8" />
-  <title>Structure Optimization with VASP – Haitao Hu</title>
+  <title>使用 VASP 进行结构优化 – Haitao Hu</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="Notes on structure optimization using VASP" />
 
@@ -150,7 +150,7 @@
     }
   </style>
   <link rel="stylesheet" href="../../assets/site.css" />
-  <link rel="alternate" hreflang="zh-CN" href="opt.zh.html" />
+  <link rel="alternate" hreflang="en" href="opt.html" />
 </head>
 
 <body>
@@ -161,17 +161,17 @@
       <div class="breadcrumbs">
         <a href="/index.html">Home</a> ·
         <a href="/notes/dft/index.html">notes on DFT calculations</a> ·
-        <span>Structure optimization</span>
+        <span>结构优化</span>
       </div>
     </div>
   </header>
 
   <main class="note-layout">
     <article class="note-card">
-      <h1>Structure Optimization using VASP</h1>
+      <h1>使用 VASP 进行结构优化</h1>
       <div class="note-meta">
-        <span>Published <time id="published-date" datetime="2025-12-20">2025-12-20</time></span>
-        <a class="language-switch" href="opt.zh.html" hreflang="zh-CN">中文</a>
+        <span>发布于 <time id="published-date" datetime="2025-12-20">2025-12-20</time></span>
+        <a class="language-switch" href="opt.html" hreflang="en">English</a>
       </div>
 
       <!-- 自动生成目录 -->
@@ -181,20 +181,20 @@
     </div>
 
       <!-- 正文 -->
-      <h2 id="basic-idea">1. Basic idea</h2>
+      <h2 id="basic-idea">1. 基本思路</h2>
       <p>
-        Structure optimization aims to find atomic positions $\mathbf{R}_i$ that minimize
-        the total energy $E(\mathbf{R}_i)$ or make all forces smaller than a given threshold,
-        e.g. $|F_i| \lt 0.01 \text{ eV/Å}$.
+        结构优化的目标是找到使总能量 $E(\mathbf{R}_i)$ 最小的原子位置
+        $\mathbf{R}_i$，或使所有原子受力都小于给定的阈值，
+        例如 $|F_i| \lt 0.01 \text{ eV/Å}$。
       </p>
       <p>
-        In VASP this is usually done by setting $\texttt{IBRION}$, $\texttt{ISIF}$ and
-        $\texttt{NSW}$ properly so that the ions are allowed to relax.
+        在 VASP 中，通常需要合理设置 $\texttt{IBRION}$、$\texttt{ISIF}$ 和
+        $\texttt{NSW}$，以便允许离子弛豫。
       </p>
 
-      <h2 id="inputs">2. Typical VASP input files</h2>
+      <h2 id="inputs">2. 常见的 VASP 输入文件</h2>
 
-      <h3>2.1 INCAR (toy example)</h3>
+      <h3>2.1 INCAR（简化示例）</h3>
       <pre><code>SYSTEM = Example relaxation
 ENCUT  = 520
 EDIFF  = 1E-6
@@ -208,18 +208,18 @@ ISMEAR = 0
 SIGMA  = 0.05
 </code></pre>
 
-      <h3>2.2 KPOINTS & POTCAR</h3>
+      <h3>2.2 KPOINTS 和 POTCAR</h3>
       <p>
-        Choose a reasonably K-space path，for example $9 × 9 × 1$ for 2D systems 
+        选择合理的 K 空间路径，例如对于二维体系可使用 $9 × 9 × 1$。
       </p>
       <p>
-        $\texttt{POTCAR}$ can be generated using vaspkit.
+        $\texttt{POTCAR}$ 可以使用 vaspkit 生成。
       </p>
 
 
-      <h2 id="output">3. Output files</h2>
+      <h2 id="output">3. 输出文件</h2>
       <p>
-        The file $\texttt{CONTCAR}$ is what you need, and $\texttt{OUTCAR}$ contains detailed information about the relaxation process.
+        所需的文件是 $\texttt{CONTCAR}$，而 $\texttt{OUTCAR}$ 中包含弛豫过程的详细信息。
       </p>
 
 

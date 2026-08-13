@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN" data-note-alternate="二次量子化.en.html">
+<html lang="en" data-note-alternate="二次量子化.html">
 
 <head>
   <meta charset="UTF-8" />
@@ -218,7 +218,7 @@
     }
   </style>
   <link rel="stylesheet" href="../../assets/site.css" />
-  <link rel="alternate" hreflang="en" href="二次量子化.en.html" />
+  <link rel="alternate" hreflang="zh-CN" href="二次量子化.html" />
 </head>
 
 <body>
@@ -229,17 +229,17 @@
       <div class="breadcrumbs">
         <a href="/index.html">Home</a> ·
         <a href="/notes/tb/index.html">notes on Tight-binding models</a> ·
-        <span>二次量子化</span>
+        <span>Second Quantization</span>
       </div>
     </div>
   </header>
 
   <main class="note-layout">
     <article class="note-card">
-      <h1>二次量子化</h1>
+      <h1>Second Quantization</h1>
       <div class="note-meta">
-        <span>发布于 <time id="published-date" datetime="2025-12-23">2025-12-23</time></span>
-        <a class="language-switch" href="二次量子化.en.html" hreflang="en">English</a>
+        <span>Published <time id="published-date" datetime="2025-12-23">2025-12-23</time></span>
+        <a class="language-switch" href="二次量子化.html" hreflang="zh-CN">中文</a>
       </div>
 
       <!-- 自动生成目录 -->
@@ -249,38 +249,38 @@
       </div>
 
       <!-- 正文部分，可随意替换 -->
-      <h2 id="finite-difference">1. 有限差分法离散化哈密顿量</h2>
+      <h2 id="finite-difference">1. Discretizing the Hamiltonian by Finite Differences</h2>
       <p>
-        先给出势场 $U(x)$ 下的薛定谔方程
+        We begin with the Schrödinger equation in a potential $U(x)$:
         \begin{align}
         E \psi = [- \frac{\hbar^2}{2m} \nabla^2 + U(x)] \psi, \label{eq1}
         \end{align}
-        如果考虑的为一维链，则上式化为
+        For a one-dimensional chain, this becomes
         \begin{align}
         E \psi(x) = [- \frac{\hbar^2}{2m} \frac{\partial^2}{\partial x^2} + U(x)] \psi(x), \label{eq2}
         \end{align}
-        进而我们可以将一维链离散化为间距为a的格点。利用
+        We can then discretize the one-dimensional chain into lattice sites separated by a spacing a. Using
         \begin{align}
         \frac{\partial}{\partial x} \psi(x) = \frac{\psi(x+a) - \psi(x)}{a}, \label{eq3}
         \end{align}
-        以及
+        together with
         \begin{align}
         \frac{\partial^2}{\partial x^2} \psi(x) = [\frac{\psi(x+a) - \psi(x)}{a} & - \frac{\psi(x) - \psi(x-a)}{a}]/a =
         \frac{\psi(x+a) - 2\psi(x) + \psi(x-a)}{a^2},
         \end{align}
-        可以将$\nabla^2$表示为差分的形式，则有
+        the Laplacian $\nabla^2$ can be expressed in finite-difference form, giving
         \begin{align}
         E \psi(x) = - \frac{\hbar^2[\psi(x+a) + \psi(x-a) -2\psi(x)]}{2ma^2} + U(x) \psi(x). \label{eq4}
         \end{align}
-        接下去我们记离散化后的格点$x = ja$，则$\psi(x) = \psi_j$，进而上式化为
+        Labeling the discretized lattice sites by $x = ja$, so that $\psi(x) = \psi_j$, the equation becomes
         \begin{align}
         E \psi_j = - \frac{\hbar^2[\psi_{j+1} + \psi_{j-1} -2\psi_j]}{2ma^2} + U_j \psi_j. \label{eq5}
         \end{align}
-        将$\dfrac{-\hbar^2}{2ma^2}$记作$t$，则有
+        Denoting $\dfrac{-\hbar^2}{2ma^2}$ by $t$, we obtain
         \begin{align}
         E \psi_j = t [\psi_{j+1} + \psi_{j-1} -2\psi_j] + U_j \psi_j, \label{eq6}
         \end{align}
-        至此我们成功将哈密顿量离散化了，其矩阵形式如下
+        The Hamiltonian has now been discretized. Its matrix form is
         \begin{equation}
         E
         \begin{pmatrix}
@@ -323,13 +323,13 @@
         \end{pmatrix}
         \label{eq15}
         \end{equation}
-        大多数文献中，紧束缚哈密顿量形式往往如下
+        In much of the literature, the tight-binding Hamiltonian is commonly written as
         \begin{align}
         \mathcal{H} = \sum_n (U_n-2t)c_n^{\dagger}c_n
         + t\sum_n (c_n^{\dagger}c_{n+1}+{\rm H.c.})
         \end{align}
-        其中均匀的对角能移 $-2t$ 可以吸收到在位能或能量零点中，所以文献中常省略这一常数平移。此外，由于
-        $t=-\hbar^2/(2ma^2)$，也常把最近邻跃迁写成 $-t_0$，其中 $t_0=\hbar^2/(2ma^2)>0$。
+        The uniform diagonal energy shift $-2t$ can be absorbed into the on-site energy or the choice of energy zero, so this constant shift is often omitted. Moreover, because
+        $t=-\hbar^2/(2ma^2)$, the nearest-neighbor hopping is also frequently written as $-t_0$, where $t_0=\hbar^2/(2ma^2)>0$.
 
 
     </article>

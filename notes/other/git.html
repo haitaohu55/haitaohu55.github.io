@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN" data-note-alternate="git.en.html">
 <head>
   <meta charset="UTF-8" />
   <title>git - Haitao Hu</title>
@@ -151,6 +151,7 @@
     }
   </style>
   <link rel="stylesheet" href="../../assets/site.css" />
+  <link rel="alternate" hreflang="en" href="git.en.html" />
 </head>
 
 <body>
@@ -165,12 +166,12 @@
     </div>
   </header>
 
-  <main>
+  <main class="note-layout">
     <article class="note-card">
       <h1>git</h1>
       <div class="note-meta">
-        Last updated:
-        <time id="last-updated">2026-03-05</time>
+        <span>发布于 <time id="published-date" datetime="2026-03-05">2026-03-05</time></span>
+        <a class="language-switch" href="git.en.html" hreflang="en">English</a>
       </div>
 
       <div class="toc">
@@ -454,27 +455,6 @@ git push origin bugFix</code></pre>
     © <span id="year"></span> Haitao Hu
   </footer>
 
-  <script>
-    const yearElem = document.getElementById("year");
-    if (yearElem) {
-      yearElem.textContent = new Date().getFullYear();
-    }
-
-    const tocList = document.getElementById("toc-list");
-    if (tocList) {
-      const headings = document.querySelectorAll(".note-content h2");
-      headings.forEach((heading, index) => {
-        if (!heading.id) {
-          heading.id = "section-" + (index + 1);
-        }
-        const li = document.createElement("li");
-        const a = document.createElement("a");
-        a.href = "#" + heading.id;
-        a.textContent = heading.textContent || "";
-        li.appendChild(a);
-        tocList.appendChild(li);
-      });
-    }
-  </script>
+  <script src="../../assets/note-page.js"></script>
 </body>
 </html>

@@ -102,9 +102,16 @@ def parse_args() -> argparse.Namespace:
         description="Convert TeX notes to HTML pages and update category index."
     )
     parser.add_argument("--category", required=True, choices=sorted(CATEGORY_CONFIG.keys()))
-    parser.add_argument("--source", required=True, help="Path to .tex source file")
-    parser.add_argument("--title", required=True, help="Display title in index and note page")
+    parser.add_argument("--source", required=True, help="Path to the original .tex source file")
+    parser.add_argument("--translation-source", required=True, help="Path to the translated .tex source file")
+    parser.add_argument("--source-lang", required=True, choices=("zh-CN", "en"))
+    parser.add_argument("--title", required=True, help="Original title in index and note page")
+    parser.add_argument("--translation-title", required=True, help="Translated note-page title")
     parser.add_argument("--slug", required=True, help="Output file slug (without .html)")
+    parser.add_argument(
+        "--published-date",
+        help="First publication date in YYYY-MM-DD; existing notes reuse their stored date",
+    )
     return parser.parse_args()
 
 
@@ -130,6 +137,11 @@ def ensure_pandoc() -> None:
 def normalize_text(raw: str) -> str:
     text = TAG_RE.sub("", raw)
     text = html.unescape(text)
+    text = "".join(
+        character
+        for character in text
+        if ord(character) >= 32 or character in "\t\n\r"
+    )
     return " ".join(text.split())
 
 
@@ -261,20 +273,20 @@ def excerpt_from_note(path: Path) -> str:
         return re.sub(r"[{}]", "", value)
 
     for paragraph in parser.paragraphs:
-        if len(paragraph) < 24:
-            continue
         if "http://" in paragraph or "https://" in paragraph:
             continue
         before_display_math = re.split(r"\\begin\{", paragraph, maxsplit=1)[0].strip()
-        if len(before_display_math) >= 16:
+        if len(before_display_math) >= 8:
             paragraph = before_display_math
+        if len(paragraph) < 8:
+            continue
         paragraph = re.sub(r"\$([^$]+)\$", plain_inline_math, paragraph)
         paragraph = re.sub(r"\\[A-Za-z]+", "", paragraph)
         paragraph = re.sub(r"[{}]", "", paragraph)
         paragraph = " ".join(paragraph.split())
         paragraph = re.sub(r"\s+([，。,.])", r"\1", paragraph)
         paragraph = re.sub(r",?\s*e\.g\.\.?$", ".", paragraph)
-        if len(paragraph) >= 16:
+        if len(paragraph) >= 8:
             return paragraph
     if parser.headings:
         return " · ".join(parser.headings[:3])
@@ -341,7 +353,9 @@ def render_page(
     title: str,
     breadcrumb_html: str,
     content_html: str,
-    last_updated: str,
+    published_date: str,
+    page_lang: str,
+    alternate_filename: str,
 ) -> str:
     if not TEMPLATE_PATH.exists():
         raise RuntimeError(f"模板不存在：{TEMPLATE_PATH}")
@@ -351,7 +365,13 @@ def render_page(
         "{{title}}": html.escape(title),
         "{{breadcrumb}}": breadcrumb_html,
         "{{content_html}}": content_html,
-        "{{last_updated}}": html.escape(last_updated),
+        "{{published_date}}": html.escape(published_date),
+        "{{page_lang}}": html.escape(page_lang, quote=True),
+        "{{alternate_filename}}": html.escape(alternate_filename, quote=True),
+        "{{alternate_lang}}": "en" if page_lang == "zh-CN" else "zh-CN",
+        "{{alternate_label}}": "English" if page_lang == "zh-CN" else "中文",
+        "{{published_label}}": "发布于" if page_lang == "zh-CN" else "Published",
+        "{{contents_label}}": "目录" if page_lang == "zh-CN" else "Contents",
     }
     for placeholder, value in replacements.items():
         template = template.replace(placeholder, value)
@@ -361,6 +381,32 @@ def render_page(
         unresolved_text = ", ".join(sorted(set(unresolved)))
         raise RuntimeError(f"模板中存在未替换占位符：{unresolved_text}")
     return template
+
+
+def resolve_published_date(
+    category: str,
+    slug: str,
+    requested: str | None,
+    now: dt.datetime,
+) -> tuple[str, str]:
+    entries = {entry.slug: entry for entry in read_category_entries(category)}
+    existing = entries.get(slug)
+    if existing and existing.created != EPOCH_CREATED:
+        return existing.created[:10], existing.created
+
+    if requested:
+        try:
+            date_value = dt.date.fromisoformat(requested)
+        except ValueError as exc:
+            raise ValueError("--published-date 必须是 YYYY-MM-DD。") from exc
+        local_time = dt.datetime.combine(
+            date_value,
+            dt.time.min,
+            tzinfo=now.tzinfo,
+        )
+        return date_value.isoformat(), local_time.isoformat(timespec="seconds")
+
+    return now.date().isoformat(), now.isoformat(timespec="seconds")
 
 
 def run_pandoc(cmd: list[str], input_text: str | None = None) -> tuple[int, str, str]:
@@ -444,8 +490,8 @@ def convert_tex_to_html(source: Path) -> str:
     return fallback_html
 
 
-def write_note_page(category: str, slug: str, page_html: str) -> Path:
-    output_path = ROOT / "notes" / category / f"{slug}.html"
+def write_note_page(category: str, filename: str, page_html: str) -> Path:
+    output_path = ROOT / "notes" / category / filename
     if output_path.exists():
         existing = output_path.read_text(encoding="utf-8", errors="ignore")
         if GENERATED_MARKER not in existing:
@@ -486,34 +532,63 @@ def main() -> int:
 
     try:
         validate_slug(args.slug)
-        if not source.exists():
-            raise FileNotFoundError(f"source 文件不存在：{source}")
-        if source.suffix.lower() != ".tex":
-            raise ValueError("source 必须是 .tex 文件。")
+        translation_source = Path(args.translation_source).expanduser()
+        for label, candidate in (
+            ("source", source),
+            ("translation-source", translation_source),
+        ):
+            if not candidate.exists():
+                raise FileNotFoundError(f"{label} 文件不存在：{candidate}")
+            if candidate.suffix.lower() != ".tex":
+                raise ValueError(f"{label} 必须是 .tex 文件。")
 
         ensure_pandoc()
         content_html = convert_tex_to_html(source)
+        translated_content_html = convert_tex_to_html(translation_source)
 
         config = CATEGORY_CONFIG[args.category]
-        breadcrumb = (
+        original_breadcrumb = (
             f'<a href="{config["index_href"]}">{html.escape(config["label"])}</a> · '
             f"<span>{html.escape(args.title)}</span>"
         )
-        now = dt.datetime.now().astimezone()
-        created_iso = now.isoformat(timespec="seconds")
-        last_updated = now.date().isoformat()
-
-        page_html = render_page(
-            title=args.title,
-            breadcrumb_html=breadcrumb,
-            content_html=content_html,
-            last_updated=last_updated,
+        translation_breadcrumb = (
+            f'<a href="{config["index_href"]}">{html.escape(config["label"])}</a> · '
+            f"<span>{html.escape(args.translation_title)}</span>"
         )
-        output_path = write_note_page(args.category, args.slug, page_html)
+        now = dt.datetime.now().astimezone()
+        published_date, created_iso = resolve_published_date(
+            args.category,
+            args.slug,
+            args.published_date,
+            now,
+        )
+        translation_suffix = "en" if args.source_lang == "zh-CN" else "zh"
+        translated_filename = f"{args.slug}.{translation_suffix}.html"
+
+        original_html = render_page(
+            title=args.title,
+            breadcrumb_html=original_breadcrumb,
+            content_html=content_html,
+            published_date=published_date,
+            page_lang=args.source_lang,
+            alternate_filename=translated_filename,
+        )
+        translated_lang = "en" if args.source_lang == "zh-CN" else "zh-CN"
+        translated_html = render_page(
+            title=args.translation_title,
+            breadcrumb_html=translation_breadcrumb,
+            content_html=translated_content_html,
+            published_date=published_date,
+            page_lang=translated_lang,
+            alternate_filename=f"{args.slug}.html",
+        )
+        output_path = write_note_page(args.category, f"{args.slug}.html", original_html)
+        translated_path = write_note_page(args.category, translated_filename, translated_html)
         index_path = update_index(args.category, args.slug, args.title, created_iso)
         overview_path = update_notes_overview()
 
         print(f"[OK] Generated note: {output_path}")
+        print(f"[OK] Generated translation: {translated_path}")
         print(f"[OK] Updated index: {index_path}")
         print(f"[OK] Updated overview: {overview_path}")
         return 0

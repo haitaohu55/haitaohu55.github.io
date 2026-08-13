@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN" data-note-alternate="linux.en.html">
+<html lang="en" data-note-alternate="linux.html">
 
 <head>
     <meta charset="UTF-8" />
@@ -154,7 +154,7 @@
         }
     </style>
     <link rel="stylesheet" href="../../assets/site.css" />
-  <link rel="alternate" hreflang="en" href="linux.en.html" />
+  <link rel="alternate" hreflang="zh-CN" href="linux.html" />
 </head>
 
 <body>
@@ -174,8 +174,8 @@
         <article class="note-card">
             <h1>Some common Linux commands</h1>
             <div class="note-meta">
-        <span>发布于 <time id="published-date" datetime="2025-12-25">2025-12-25</time></span>
-        <a class="language-switch" href="linux.en.html" hreflang="en">English</a>
+        <span>Published <time id="published-date" datetime="2025-12-25">2025-12-25</time></span>
+        <a class="language-switch" href="linux.html" hreflang="zh-CN">中文</a>
       </div>
 
             <!-- 自动生成目录 -->
@@ -186,7 +186,7 @@
 
             <!-- 正文部分 -->
 
-            <h2 id="files">1. 文件管理</h2>
+            <h2 id="files">1. File Management</h2>
             <pre><code class="language-bash">
 pwd               # 查看当前位置
 
@@ -211,7 +211,7 @@ mv CONTCAR POSCAR   # 重命名
 </code></pre>
 
 
-            <h2 id="view">2. 查看与搜索文件内容</h2>
+            <h2 id="view">2. Viewing and Searching File Contents</h2>
             <pre><code class="language-bash">
 # 快速查看
 cat OUTCAR          # 一次性打印
@@ -223,7 +223,7 @@ grep fermi OUTCAR           # 找到含 fermi 的行
 </code></pre>
 
 
-            <h2 id="edit">3. 简单编辑：vim / vi</h2>
+            <h2 id="edit">3. Basic Editing: vim / vi</h2>
             <pre><code class="language-bash">
 vi INCAR     # 或 vim INCAR
 
@@ -235,7 +235,7 @@ Esc         # 退出插入模式
 :wq         # 保存并退出
 :q!         # 强制退出(不保存)</code></pre>
 
-            <h2 id="slurm">4. Slurm 作业管理</h2>
+            <h2 id="slurm">4. Slurm Job Management</h2>
             <pre><code class="language-bash">
 # 提交作业
 sbatch job.slurm
@@ -247,9 +247,9 @@ squeue     # 查看自己所有任务
 scancel 123456
 </code></pre>
 
-            <h2 id="git">5. GitHub 基本操作</h2>
+            <h2 id="git">5. Basic GitHub Operations</h2>
             <p>
-                用于同步本地个人主页 / 笔记到 GitHub Pages。
+                These commands are used to sync the local personal homepage and notes to GitHub Pages.
             </p>
             <pre><code class="language-bash">
 # 进入本地目录
@@ -266,9 +266,9 @@ git commit -m "some message"  # 提交暂存的修改，附加说明信息
 git pull origin main       # 先拉远程(有需要时)
 git push origin main       # 再推送本地修改</code></pre>
 
-            <h2 id="ssh">6. 远程登录与传文件：SSH</h2>
+            <h2 id="ssh">6. Remote Login and File Transfer: SSH</h2>
             <p>
-                从本地连接到集群，以及在本地和集群之间传输文件。
+                Connect to the cluster from a local machine and transfer files between the local machine and the cluster.
             </p>
             <pre><code class="language-bash">
 # 登录集群

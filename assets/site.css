@@ -151,6 +151,14 @@ main.home-layout {
   align-items: start;
 }
 
+main.note-layout {
+  width: min(100% - 40px, 1120px);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 210px;
+  gap: 24px;
+  align-items: start;
+}
+
 .profile-card,
 section,
 .note-card,
@@ -514,7 +522,7 @@ li + li {
 }
 
 .note-card {
-  overflow: hidden;
+  overflow: visible;
   padding: clamp(26px, 4.5vw, 42px) clamp(22px, 6vw, 54px);
 }
 
@@ -538,20 +546,46 @@ li + li {
   max-width: 68ch;
   margin-bottom: 24px;
   padding-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   color: var(--color-muted);
   font-size: 12px;
   line-height: 1.6;
   border-bottom: 1px solid var(--color-line);
 }
 
+.language-switch {
+  flex: 0 0 auto;
+  padding: 4px 9px;
+  color: var(--color-secondary-ink);
+  background: var(--color-canvas);
+  border: 1px solid var(--color-line);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.language-switch:hover {
+  color: var(--color-accent-dark);
+  background: var(--color-paper);
+  text-decoration: none;
+}
+
 .toc {
-  max-width: 68ch;
-  margin: 0 0 34px;
-  padding: 4px 0 4px 17px;
-  background: transparent;
-  border: 0;
-  border-left: 2px solid var(--color-line);
-  border-radius: 0;
+  position: sticky;
+  top: 78px;
+  max-width: none;
+  max-height: calc(100vh - 102px);
+  margin: 0;
+  padding: 18px 16px;
+  overflow-y: auto;
+  background: var(--color-paper);
+  border: 1px solid var(--color-line);
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(29, 29, 31, 0.04);
 }
 
 .toc-title {
@@ -565,7 +599,8 @@ li + li {
 
 .toc ul {
   margin: 0;
-  padding-left: 18px;
+  padding: 0;
+  list-style: none;
   color: var(--color-muted);
   font-size: 13px;
   line-height: 1.55;
@@ -576,8 +611,13 @@ li + li {
 }
 
 .toc a {
+  display: block;
   color: var(--color-secondary-ink);
   text-decoration-color: transparent;
+}
+
+.toc-toggle {
+  display: none;
 }
 
 .toc a:hover {
@@ -695,6 +735,55 @@ li + li {
   overflow-y: hidden;
 }
 
+.math-viewport {
+  width: 100%;
+  max-width: 100%;
+  margin: 24px 0;
+  padding: 10px 4px 12px;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  border-top: 1px solid var(--color-line);
+  border-bottom: 1px solid var(--color-line);
+  scrollbar-gutter: stable;
+  -webkit-overflow-scrolling: touch;
+}
+
+.math-viewport mjx-container[display="true"] {
+  width: max-content;
+  min-width: 100%;
+  max-width: none;
+  margin: 12px auto !important;
+  overflow: visible !important;
+}
+
+.math-viewport__hint {
+  position: sticky;
+  left: 0;
+  display: none;
+  width: max-content;
+  margin: 2px auto 0;
+  color: var(--color-muted);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.math-viewport.is-overflowing .math-viewport__hint {
+  display: block;
+}
+
+.math-viewport:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
+
+@media (min-width: 1100px) {
+  .math-viewport--matrix {
+    width: calc(100% + 76px);
+    max-width: none;
+    margin-left: -38px;
+  }
+}
+
 img {
   max-width: 100%;
   height: auto;
@@ -711,6 +800,49 @@ footer {
   main.home-layout {
     width: min(100% - 40px, 816px);
     display: block;
+  }
+
+  main.note-layout {
+    width: min(100% - 28px, 680px);
+    display: block;
+  }
+
+  main.note-layout .toc {
+    position: fixed;
+    top: 66px;
+    right: 12px;
+    z-index: 40;
+    width: min(292px, calc(100% - 24px));
+    max-height: calc(100vh - 132px);
+    transform: translateX(calc(100% + 28px));
+    visibility: hidden;
+    transition: transform 160ms ease, visibility 160ms ease;
+    box-shadow: 0 14px 36px rgba(29, 29, 31, 0.16);
+  }
+
+  main.note-layout .toc.is-open {
+    transform: translateX(0);
+    visibility: visible;
+  }
+
+  .toc-toggle {
+    position: fixed;
+    right: 16px;
+    bottom: 18px;
+    z-index: 35;
+    min-height: 40px;
+    padding: 8px 13px;
+    display: inline-flex;
+    align-items: center;
+    color: var(--color-paper);
+    background: var(--color-ink);
+    border: 1px solid var(--color-ink);
+    border-radius: 999px;
+    box-shadow: 0 5px 16px rgba(29, 29, 31, 0.16);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 650;
+    cursor: pointer;
   }
 
   .profile-card {
@@ -861,6 +993,16 @@ footer {
   .note-card {
     padding: 25px 18px;
     border-radius: 7px;
+  }
+
+  .note-meta {
+    align-items: flex-start;
+  }
+
+  .math-viewport--matrix {
+    width: calc(100% + 12px);
+    max-width: none;
+    margin-left: -6px;
   }
 
   .profile-school {

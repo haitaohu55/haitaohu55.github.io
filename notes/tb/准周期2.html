@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-note-alternate="准周期2.en.html">
 
 <head>
     <meta charset="UTF-8" />
@@ -216,6 +216,7 @@
         }
     </style>
     <link rel="stylesheet" href="../../assets/site.css" />
+  <link rel="alternate" hreflang="en" href="准周期2.en.html" />
 </head>
 
 <body>
@@ -231,13 +232,13 @@
         </div>
     </header>
 
-    <main>
+    <main class="note-layout">
         <article class="note-card">
             <h1>准周期2</h1>
             <div class="note-meta">
-                Last updated:
-                <time id="last-updated"></time>
-            </div>
+        <span>发布于 <time id="published-date" datetime="2026-08-10">2026-08-10</time></span>
+        <a class="language-switch" href="准周期2.en.html" hreflang="en">English</a>
+      </div>
 
             <!-- 自动生成目录 -->
             <div class="toc">
@@ -388,45 +389,7 @@ legend('QR numerical', 'AAH exact', 'Location', 'northwest');
         © <span id="year"></span> Haitao Hu
     </footer>
 
-    <script>
-        // 自动更新年份
-        const yearElem = document.getElementById('year');
-        if (yearElem) {
-            yearElem.textContent = new Date().getFullYear();
-        }
-
-        // 自动更新最后修改时间
-        const lastUpdatedElem = document.getElementById("last-updated");
-        if (lastUpdatedElem) {
-            const t = new Date(document.lastModified);
-            const pad = n => String(n).padStart(2, "0");
-            const formatted = `${t.getFullYear()}-${pad(t.getMonth() + 1)}-${pad(t.getDate())}`;
-            lastUpdatedElem.textContent = formatted;
-        }
-
-        // 自动生成目录
-        const tocList = document.getElementById("toc-list");
-        if (tocList) {
-            const headings = document.querySelectorAll("h2");
-
-            headings.forEach((h, i) => {
-                // 没写 id 的话自动补一个
-                if (!h.id) {
-                    h.id = "section-" + (i + 1);
-                }
-
-                const li = document.createElement("li");
-                const a = document.createElement("a");
-                a.href = "#" + h.id;
-                a.textContent = h.textContent;
-                li.appendChild(a);
-                tocList.appendChild(li);
-            });
-        }
-        // 自动高亮所有 <pre><code>...</code></pre>
-        hljs.highlightAll();
-    </script>
-
+    <script src="../../assets/note-page.js"></script>
 </body>
 
 </html>

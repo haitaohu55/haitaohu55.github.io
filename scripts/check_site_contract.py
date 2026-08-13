@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+import re
+from collections import Counter
 from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
@@ -51,6 +53,18 @@ NOTES_CATEGORIES = {
     "tb": Path("notes/tb/index.html"),
     "other": Path("notes/other/index.html"),
 }
+NOTE_PAIRS = {
+    Path("notes/dft/linux.html"): (Path("notes/dft/linux.en.html"), "zh-CN", "en", "2025-12-25"),
+    Path("notes/dft/opt.html"): (Path("notes/dft/opt.zh.html"), "en", "zh-CN", "2025-12-20"),
+    Path("notes/dft/phonon-spectrum.html"): (Path("notes/dft/phonon-spectrum.en.html"), "zh-CN", "en", "2026-05-17"),
+    Path("notes/tb/IsingMC.html"): (Path("notes/tb/IsingMC.en.html"), "zh-CN", "en", "2025-12-23"),
+    Path("notes/tb/二次量子化.html"): (Path("notes/tb/二次量子化.en.html"), "zh-CN", "en", "2025-12-23"),
+    Path("notes/tb/准周期1.html"): (Path("notes/tb/准周期1.en.html"), "zh-CN", "en", "2025-12-25"),
+    Path("notes/tb/准周期2.html"): (Path("notes/tb/准周期2.en.html"), "zh-CN", "en", "2026-08-10"),
+    Path("notes/tb/精确对角化.html"): (Path("notes/tb/精确对角化.en.html"), "zh-CN", "en", "2025-12-23"),
+    Path("notes/other/git.html"): (Path("notes/other/git.en.html"), "zh-CN", "en", "2026-03-05"),
+}
+NOTE_SCRIPT_SRC = "../../assets/note-page.js"
 PUBLICATIONS_INTRO = "Selected work in quasiperiodic systems and localization, with brief abstracts."
 GOOGLE_SCHOLAR_URL = "https://scholar.google.com.hk/citations?hl=zh-CN&user=51eUsJkAAAAJ"
 APS_PUBLICATION_URLS = [
@@ -154,10 +168,40 @@ class PageParser(HTMLParser):
         self.notes_more_hrefs: dict[str, list[str]] = {}
         self.images: list[dict[str, str]] = []
         self.all_text: list[str] = []
+        self.html_lang = ""
+        self.html_attributes: dict[str, str] = {}
+        self.ids: list[str] = []
+        self.h2_ids: list[str] = []
+        self.script_srcs: list[str] = []
+        self.time_values: list[tuple[dict[str, str], str]] = []
+        self.time_attributes: dict[str, str] | None = None
+        self.time_buffer: list[str] = []
+        self.pre_depth = 0
+        self.pre_buffer: list[str] = []
+        self.pre_texts: list[str] = []
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         attributes = dict(attrs)
         classes = set((attributes.get("class") or "").split())
+        if tag == "html":
+            self.html_lang = attributes.get("lang") or ""
+            self.html_attributes = {
+                key: value or "" for key, value in attributes.items()
+            }
+        if attributes.get("id"):
+            self.ids.append(attributes["id"] or "")
+        if tag == "h2" and attributes.get("id"):
+            self.h2_ids.append(attributes["id"] or "")
+        if tag == "script" and attributes.get("src"):
+            self.script_srcs.append(attributes["src"] or "")
+        if tag == "time":
+            self.time_attributes = {
+                key: value or "" for key, value in attributes.items()
+            }
+            self.time_buffer = []
+        if tag == "pre":
+            self.pre_depth += 1
+            self.pre_buffer = []
         if tag == "nav":
             self.nav_depth += 1
         if "profile-card" in classes:
@@ -208,6 +252,16 @@ class PageParser(HTMLParser):
             self.section_ids.append(attributes["id"] or "")
 
     def handle_endtag(self, tag: str) -> None:
+        if tag == "time" and self.time_attributes is not None:
+            self.time_values.append(
+                (self.time_attributes, "".join(self.time_buffer).strip())
+            )
+            self.time_attributes = None
+            self.time_buffer = []
+        if tag == "pre" and self.pre_depth:
+            self.pre_texts.append("".join(self.pre_buffer))
+            self.pre_depth -= 1
+            self.pre_buffer = []
         if tag == "nav" and self.nav_depth:
             self.nav_depth -= 1
         if tag in {"aside", "section"} and self.profile_depth:
@@ -220,6 +274,10 @@ class PageParser(HTMLParser):
             self.notes_preview_depth -= 1
 
     def handle_data(self, data: str) -> None:
+        if self.time_attributes is not None:
+            self.time_buffer.append(data)
+        if self.pre_depth:
+            self.pre_buffer.append(data)
         value = " ".join(data.split())
         if value:
             self.all_text.append(value)
@@ -258,6 +316,32 @@ def managed_note_hrefs(path: Path) -> list[str]:
     parser.feed(managed)
     parser.close()
     return parser.hrefs
+
+
+def math_blocks(source: str) -> list[str]:
+    display_matches = re.finditer(
+        r"\\begin\{(align\*?|equation\*?|array|pmatrix|bmatrix)\}.*?"
+        r"\\end\{\1\}",
+        source,
+        flags=re.DOTALL,
+    )
+    display = [match.group(0) for match in display_matches]
+    doubles = re.findall(r"\$\$.*?\$\$", source, flags=re.DOTALL)
+    without_display = source
+    for block in display:
+        without_display = without_display.replace(block, "", 1)
+    without_display = re.sub(
+        r"\$\$.*?\$\$",
+        "",
+        without_display,
+        flags=re.DOTALL,
+    )
+    inline = re.findall(
+        r"(?<!\\)\$(?!\$).*?(?<!\\)\$",
+        without_display,
+        flags=re.DOTALL,
+    )
+    return display + doubles + inline
 
 
 def main() -> int:
@@ -354,9 +438,85 @@ def main() -> int:
             "NOTES_PREVIEW_LIMIT = 3",
             "def update_notes_overview()",
             "overview_path = update_notes_overview()",
+            "def resolve_published_date(",
         ):
             if marker not in sync_source:
                 failures.append(f"笔记同步脚本缺少总览更新规则：{marker}")
+
+    note_script = ROOT / "assets" / "note-page.js"
+    if not note_script.is_file():
+        failures.append("缺少具体笔记交互脚本：assets/note-page.js")
+
+    for original_relative, pair in NOTE_PAIRS.items():
+        translated_relative, original_lang, translated_lang, published = pair
+        original_path = ROOT / original_relative
+        translated_path = ROOT / translated_relative
+        if not original_path.is_file() or not translated_path.is_file():
+            failures.append(
+                f"缺少双语笔记配对：{original_relative} <-> {translated_relative}"
+            )
+            continue
+
+        original = parse(original_path)
+        translated = parse(translated_path)
+        original_source = original_path.read_text(encoding="utf-8")
+        translated_source = translated_path.read_text(encoding="utf-8")
+
+        if original.html_lang != original_lang or translated.html_lang != translated_lang:
+            failures.append(
+                f"笔记语言标记不符：{original_relative}={original.html_lang}, "
+                f"{translated_relative}={translated.html_lang}"
+            )
+        if original.html_attributes.get("data-note-alternate") != translated_path.name:
+            failures.append(f"原文缺少译文入口：{original_relative}")
+        if translated.html_attributes.get("data-note-alternate") != original_path.name:
+            failures.append(f"译文缺少原文入口：{translated_relative}")
+        if NOTE_SCRIPT_SRC not in original.script_srcs or NOTE_SCRIPT_SRC not in translated.script_srcs:
+            failures.append(f"双语笔记未引用统一交互脚本：{original_relative}")
+
+        for relative, page in (
+            (original_relative, original),
+            (translated_relative, translated),
+        ):
+            if page.time_values != [
+                ({"id": "published-date", "datetime": published}, published)
+            ]:
+                failures.append(f"笔记发布日期不固定：{relative} -> {page.time_values}")
+            if len(page.ids) != len(set(page.ids)):
+                failures.append(f"笔记存在重复 id：{relative}")
+
+        if original.h2_ids != translated.h2_ids:
+            failures.append(f"双语笔记章节锚点不一致：{original_relative}")
+        if original.pre_texts != translated.pre_texts:
+            failures.append(f"双语笔记代码内容被翻译或改写：{original_relative}")
+        original_images = [
+            (image["src"], image["class"]) for image in original.images
+        ]
+        translated_images = [
+            (image["src"], image["class"]) for image in translated.images
+        ]
+        if original_images != translated_images:
+            failures.append(f"双语笔记图片不一致：{original_relative}")
+        original_external = sorted(
+            href for href in original.hrefs if urlsplit(href).scheme in {"http", "https"}
+        )
+        translated_external = sorted(
+            href for href in translated.hrefs if urlsplit(href).scheme in {"http", "https"}
+        )
+        if original_external != translated_external:
+            failures.append(f"双语笔记外链不一致：{original_relative}")
+        if Counter(math_blocks(original_source)) != Counter(math_blocks(translated_source)):
+            failures.append(f"双语笔记公式内容不一致：{original_relative}")
+        if "document.lastModified" in original_source or "document.lastModified" in translated_source:
+            failures.append(f"笔记仍使用浏览器修改时间：{original_relative}")
+
+    matrix_source = (ROOT / "notes/tb/精确对角化.html").read_text(encoding="utf-8")
+    if 'class="math-viewport math-viewport--matrix"' not in matrix_source:
+        failures.append("精确对角化的大矩阵缺少独立横向浏览区")
+    if r"\hspace{-1cm}" in matrix_source:
+        failures.append("精确对角化的大矩阵仍使用导致左侧裁切的负偏移")
+    if r"\begin{array}{c|cccccccccc}" not in matrix_source:
+        failures.append("精确对角化的 10×10 矩阵列数声明不正确")
 
     publications_page = ROOT / "publications.html"
     publications = parse(publications_page)
@@ -393,6 +553,10 @@ def main() -> int:
         if page.name == "note_page.html" and page.parent.name == "templates":
             if "../../assets/site.css" not in parsed.stylesheets:
                 failures.append("笔记模板未引用生成页面所需的共享样式")
+            if "<!-- Generated by sync_tex_note.py -->" not in page.read_text(
+                encoding="utf-8"
+            ):
+                failures.append("笔记模板缺少同步脚本的生成标记")
         elif not any(href.endswith("assets/site.css") for href in parsed.stylesheets):
             failures.append(f"未引用共享样式：{relative}")
 
@@ -431,6 +595,14 @@ def main() -> int:
         for marker in NOTE_TYPOGRAPHY_MARKERS:
             if marker not in source:
                 failures.append(f"共享样式缺少照片/笔记排版规则：{marker}")
+        for marker in (
+            ".note-layout",
+            "position: sticky",
+            ".language-switch",
+            ".math-viewport",
+        ):
+            if marker not in source:
+                failures.append(f"共享样式缺少具体笔记阅读工具：{marker}")
         if "grid-template-columns: repeat(2, minmax(0, 1fr));" in source:
             failures.append("Notes 总览必须纵向排列，不应继续使用双栏分类网格")
         if ".notes-category:nth-child(3)" in source:

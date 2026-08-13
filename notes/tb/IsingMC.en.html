@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN" data-note-alternate="IsingMC.en.html">
+<html lang="en" data-note-alternate="IsingMC.html">
 
 <head>
     <meta charset="UTF-8" />
@@ -218,7 +218,7 @@
         }
     </style>
     <link rel="stylesheet" href="../../assets/site.css" />
-  <link rel="alternate" hreflang="en" href="IsingMC.en.html" />
+  <link rel="alternate" hreflang="zh-CN" href="IsingMC.html" />
 </head>
 
 <body>
@@ -229,17 +229,17 @@
             <div class="breadcrumbs">
                 <a href="/index.html">Home</a> ·
                 <a href="/notes/tb/index.html">notes on Tight-binding models</a> ·
-                <span>Ising 模型的 Monte Carlo 模拟</span>
+                <span>Monte Carlo Simulation of the Ising Model</span>
             </div>
         </div>
     </header>
 
     <main class="note-layout">
         <article class="note-card">
-            <h1>Ising 模型的 Monte Carlo 模拟</h1>
+            <h1>Monte Carlo Simulation of the Ising Model</h1>
             <div class="note-meta">
-        <span>发布于 <time id="published-date" datetime="2025-12-23">2025-12-23</time></span>
-        <a class="language-switch" href="IsingMC.en.html" hreflang="en">English</a>
+        <span>Published <time id="published-date" datetime="2025-12-23">2025-12-23</time></span>
+        <a class="language-switch" href="IsingMC.html" hreflang="zh-CN">中文</a>
       </div>
 
             <!-- 自动生成目录 -->
@@ -249,41 +249,39 @@
             </div>
 
             <!-- 正文部分，可随意替换 -->
-            <h2 id="ising-model">1. Ising 模型</h2>
+            <h2 id="ising-model">1. The Ising Model</h2>
             <p>
-                Ising模型，是物理学家 Lenz 和 Ising (Lenz的学生) 在 1920
-                年左右提出的用来模拟磁性的格点模型。其考虑的是离散网格模型，在每一个格点处有一个自旋，取值只能取1或-1，分别代表自旋向上和向下。考虑最近邻相互作用，相互作用强度为$J_{ij}$。此外，每个自旋还受到外部磁场的影响，其强度为$h_i$。体系总哈密顿量为
+                The Ising model is a lattice model proposed around 1920 by the physicists Lenz and Ising (a student of Lenz) to model magnetism. It is defined on a discrete lattice, with a spin at each lattice site that can take only the values 1 or -1, representing spin up and spin down, respectively. We consider nearest-neighbor interactions with coupling strength $J_{ij}$. Each spin is also influenced by an external magnetic field of strength $h_i$. The total Hamiltonian of the system is
                 \begin{align}
                 H(\sigma) = -\sum_{\langle i,j\rangle} J_{ij} \sigma_i \sigma_j - \mu \sum_j h_j \sigma_j. \label{eq1}
                 \end{align}
-                其中 $\langle i,j\rangle$ 代表最近邻，$\mu$ 代表磁矩，$\sigma_i$ 只能取 $\pm 1$。温度 $T$
-                下，系统不是永远待在能量最低的构型上，而是在热涨落下在各种构型之间切换。根据统计物理，正则系综在热平衡时构型 $\sigma$ 出现的概率为
+                where $\langle i,j\rangle$ denotes nearest neighbors, $\mu$ is the magnetic moment, and $\sigma_i$ can take only the values $\pm 1$. At temperature $T$, the system does not remain permanently in its lowest-energy configuration; instead, thermal fluctuations drive transitions among different configurations. In statistical physics, the probability of observing a configuration $\sigma$ in a canonical ensemble at thermal equilibrium is
                 \begin{align}
                 P_{\beta}(\sigma) = e^{- \beta H(\sigma)} / Z_{\beta}. \label{eq2}
                 \end{align}
-                其中 $\beta = (k_B T)^{-1}$，归一化常量/配分函数为
+                where $\beta = (k_B T)^{-1}$, and the normalization constant, or partition function, is
                 \begin{align}
                 Z_{\beta} = \sum_{\sigma} e^{- \beta H(\sigma)}. \label{eq3}
                 \end{align}
-                对于函数 $f$，其平均值为
+                For a function $f$, its ensemble average is
                 \begin{align}
                 \braket{f}_{\beta} = \sum_{\sigma} f(\sigma) P_{\beta}(\sigma).
                 \end{align}
-                当$J_{ij}$大于0时，称为铁磁，反之为反铁磁。而对于正的$h_j$，格点$j$上的自旋趋于朝向正，反之向负。
+                When $J_{ij}$ is greater than zero, the coupling is ferromagnetic; otherwise it is antiferromagnetic. For positive $h_j$, the spin at site $j$ tends to point in the positive direction, and conversely when the field is negative.
 
 
-            <h2 id="metropolis">2. 蒙卡模拟</h2>
+            <h2 id="metropolis">2. Monte Carlo Simulation</h2>
             <p>
-                蒙卡的核心思想是重要抽样，这是因为随机抽样得到的很多样本本质是在做无用功，而在高维问题中，要遍历所有可能的状态又是不现实的。实现这一思想的方法是Metropolis算法，其基本流程如下
+                The central idea of Monte Carlo simulation is importance sampling. Many samples obtained by uniform random sampling contribute little useful information, while enumerating every possible state is impractical in high-dimensional problems. The Metropolis algorithm implements importance sampling through the following basic procedure:
             <ol>
-                <li>选定一个初态，计算能量</li>
-                <li>随机翻转某一个自旋，并计算翻转后的能量</li>
-                <li>如果能量降低则保持翻转，如果能量升高则按$e^{- \beta (H' - H)}$概率保持翻转</li>
-                <li>重复以上步骤，可以通过收敛判断，也可以通过设置一个迭代步数</li>
+                <li>Choose an initial state and calculate its energy.</li>
+                <li>Randomly flip one spin and calculate the energy after the flip.</li>
+                <li>If the energy decreases, accept the flip; if the energy increases, accept it with probability $e^{- \beta (H' - H)}$.</li>
+                <li>Repeat the preceding steps, stopping either when convergence is reached or after a prescribed number of iterations.</li>
             </ol>
-            <h2 id="matlab-code">3. 代码</h2>
+            <h2 id="matlab-code">3. Code</h2>
             <p>
-                以下 Matlab 代码考虑零外场、周期边界条件，并取 $J=k_B=1$。对每个温度先丢弃一段热化过程，再在测量阶段按固定间隔抽样，计算单位格点绝对磁化强度 $\langle |m|\rangle$。
+                The following MATLAB code assumes zero external field and periodic boundary conditions, with $J=k_B=1$. At each temperature, an initial thermalization segment is discarded. The measurement stage then samples at fixed intervals to calculate the absolute magnetization per site, $\langle |m|\rangle$.
             <pre><code class="language-matlab">
 clear; clc; close all
 N = 16;
@@ -340,45 +338,45 @@ ylabel('&lt;|m|&gt;','FontSize',15)
 </code></pre>
 
             <p>
-                热力学极限下，二维方格 Ising 模型的精确临界温度满足
-                $T_c/J=2/\ln(1+\sqrt{2})\approx2.269$。有限尺寸系统不会出现真正的不连续奇点，而是在临界区附近呈现随尺寸变化的平滑交叉；若要精确确定 $T_c$，需要进一步做有限尺寸标度分析。
+                In the thermodynamic limit, the exact critical temperature of the two-dimensional square-lattice Ising model satisfies
+                $T_c/J=2/\ln(1+\sqrt{2})\approx2.269$. A finite system does not exhibit a genuine nonanalytic singularity; instead, it shows a smooth, size-dependent crossover near the critical region. Determining $T_c$ accurately therefore requires a further finite-size scaling analysis.
             </p>
 
-            <img src="Ising.png" alt="Ising MC Result"
+            <img src="Ising.png" alt="Monte Carlo result for the Ising model"
                 style="display:block; margin:10px auto 0; max-width:600px; width:100%; height:auto;" />
 
-            <h2 id="free-energy">题外话：配分函数和自由能</h2>
+            <h2 id="free-energy">Aside: The Partition Function and Free Energy</h2>
             <p>
-                有了配分函数就可以求出自由能 $F$
+                Once the partition function is known, the free energy $F$ can be obtained as
                 \begin{align}
                 F = - k_B T \ln Z_{\beta}. \label{eq4}
                 \end{align}
 
-                这可以从定义式出发得到
+                This relation follows directly from the definition
                 \begin{align}
                 F \equiv U-TS
                 \end{align}
-                其中 $U$ 是平均能量，$S$ 是熵。
+                where $U$ is the mean energy and $S$ is the entropy.
 
-                首先有波尔兹曼分布
+                We first write the Boltzmann distribution as
                 \begin{align}
                 p_s=\frac{e^{-\beta E_s}}{Z}.
                 \end{align}
-                两边取对数
+                Taking the logarithm of both sides gives
                 \begin{align}
                 \ln p_s = -\beta E_s - \ln Z.
                 \end{align}
-                把它乘上 $-k_B p_s$ 并对所有状态求和
+                Multiplying by $-k_B p_s$ and summing over all states yields
                 \begin{align}
                 -k_B \sum_s p_s \ln p_s
                 = -k_B\sum_s p_s(-\beta E_s-\ln Z)
                 = k_B\beta\sum_s p_s E_s + k_B(\ln Z)\sum_s p_s.
                 \end{align}
-                注意到 $\sum_s p_s E_s = U$（平均能量），$\sum_s p_s = 1$，而左边 $-k_B \sum_s p_s \ln p_s$ 正是统计物理里熵的定义。所以有
+                Noting that $\sum_s p_s E_s = U$ is the mean energy, $\sum_s p_s = 1$, and the left-hand side $-k_B \sum_s p_s \ln p_s$ is precisely the statistical-mechanical definition of entropy, we obtain
                 \begin{align}
                 S = k_B\beta U + k_B\ln Z.
                 \end{align}
-                把它代入自由能定义 $F=U-TS$，并用 $\beta=1/(k_BT)$
+                Substituting this result into the definition $F=U-TS$ and using $\beta=1/(k_BT)$ gives
                 \begin{align}
                 F = U - T (k_B\beta U + k_B \ln Z)
                 = U - T (\frac{U}{T}+k_B\ln Z )

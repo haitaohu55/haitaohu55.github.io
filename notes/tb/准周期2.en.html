@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="zh-CN" data-note-alternate="IsingMC.en.html">
+<html lang="en" data-note-alternate="准周期2.html">
 
 <head>
     <meta charset="UTF-8" />
-    <title>Ising model – Haitao Hu</title>
+    <title>Quasiperiodic systems – Haitao Hu</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Notes on Ising model" />
+    <meta name="description" content="Notes on quasiperiodic systems" />
 
     <!-- highlight.js 样式（主题可以换，这里用 github 风格） -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
@@ -26,8 +26,7 @@
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
     </script>
 
-    <!-- 你可以直接把主页 index.html 里的 <style> 整段复制过来，
-       这里我只放最核心的一些，保证能看 -->
+    <!-- 自定义样式 -->
     <style>
         /* ===== 基本样式 ===== */
         body {
@@ -137,7 +136,6 @@
             overflow-y: hidden;
         }
 
-
         section {
             background: #ffffff;
             border-radius: 8px;
@@ -218,7 +216,7 @@
         }
     </style>
     <link rel="stylesheet" href="../../assets/site.css" />
-  <link rel="alternate" hreflang="en" href="IsingMC.en.html" />
+  <link rel="alternate" hreflang="zh-CN" href="准周期2.html" />
 </head>
 
 <body>
@@ -229,17 +227,17 @@
             <div class="breadcrumbs">
                 <a href="/index.html">Home</a> ·
                 <a href="/notes/tb/index.html">notes on Tight-binding models</a> ·
-                <span>Ising 模型的 Monte Carlo 模拟</span>
+                <span>Quasiperiodic Systems II</span>
             </div>
         </div>
     </header>
 
     <main class="note-layout">
         <article class="note-card">
-            <h1>Ising 模型的 Monte Carlo 模拟</h1>
+            <h1>Quasiperiodic Systems II</h1>
             <div class="note-meta">
-        <span>发布于 <time id="published-date" datetime="2025-12-23">2025-12-23</time></span>
-        <a class="language-switch" href="IsingMC.en.html" hreflang="en">English</a>
+        <span>Published <time id="published-date" datetime="2026-08-10">2026-08-10</time></span>
+        <a class="language-switch" href="准周期2.html" hreflang="zh-CN">中文</a>
       </div>
 
             <!-- 自动生成目录 -->
@@ -249,145 +247,141 @@
             </div>
 
             <!-- 正文部分，可随意替换 -->
-            <h2 id="ising-model">1. Ising 模型</h2>
+            <h2 id="transfer-matrix">1. Transfer Matrices and Lyapunov Exponents</h2>
             <p>
-                Ising模型，是物理学家 Lenz 和 Ising (Lenz的学生) 在 1920
-                年左右提出的用来模拟磁性的格点模型。其考虑的是离散网格模型，在每一个格点处有一个自旋，取值只能取1或-1，分别代表自旋向上和向下。考虑最近邻相互作用，相互作用强度为$J_{ij}$。此外，每个自旋还受到外部磁场的影响，其强度为$h_i$。体系总哈密顿量为
+                Consider a one-dimensional nearest-neighbor tight-binding model,
                 \begin{align}
-                H(\sigma) = -\sum_{\langle i,j\rangle} J_{ij} \sigma_i \sigma_j - \mu \sum_j h_j \sigma_j. \label{eq1}
+                H=-t\sum_i (|i\rangle\langle i+1|+|i+1\rangle\langle i|)+\sum_i V_i |i\rangle\langle i|,
                 \end{align}
-                其中 $\langle i,j\rangle$ 代表最近邻，$\mu$ 代表磁矩，$\sigma_i$ 只能取 $\pm 1$。温度 $T$
-                下，系统不是永远待在能量最低的构型上，而是在热涨落下在各种构型之间切换。根据统计物理，正则系综在热平衡时构型 $\sigma$ 出现的概率为
+                whose time-independent Schrödinger equation is
                 \begin{align}
-                P_{\beta}(\sigma) = e^{- \beta H(\sigma)} / Z_{\beta}. \label{eq2}
+                H \ket{\psi}= E \ket{\psi}
+                , \label{eq1}
                 \end{align}
-                其中 $\beta = (k_B T)^{-1}$，归一化常量/配分函数为
+                Substituting $\ket{\psi} = \sum_i \alpha_i \ket{i}$ gives the discrete equation
                 \begin{align}
-                Z_{\beta} = \sum_{\sigma} e^{- \beta H(\sigma)}. \label{eq3}
+                -t (\alpha_{i+1} + \alpha_{i-1}) + V_i \alpha_i = E \alpha_i.
+                \label{eq2}
                 \end{align}
-                对于函数 $f$，其平均值为
+                which can be rearranged as
                 \begin{align}
-                \braket{f}_{\beta} = \sum_{\sigma} f(\sigma) P_{\beta}(\sigma).
+                \begin{pmatrix}
+                \alpha_{i+1} \\
+                \alpha_i
+                \end{pmatrix}
+                =
+                \begin{pmatrix}
+                \frac{V_i - E}{t} & -1 \\
+                1 & 0
+                \end{pmatrix}
+                \begin{pmatrix}
+                \alpha_{i} \\
+                \alpha_{i-1}
+                \end{pmatrix}
+                . \label{eq3}
                 \end{align}
-                当$J_{ij}$大于0时，称为铁磁，反之为反铁磁。而对于正的$h_j$，格点$j$上的自旋趋于朝向正，反之向负。
+                Define
+                \begin{align}
+                T_i =
+                \begin{pmatrix}
+                \frac{V_i - E}{t} & -1 \\
+                1 & 0
+                \end{pmatrix}
+                ,
+                \end{align}
+                We then have
+                \begin{align}
+                \begin{pmatrix}
+                \alpha_{i+1} \\
+                \alpha_i
+                \end{pmatrix}
+                =
+                T_i ~ T_{i-1} ~ \cdots ~ T_2
+                \begin{pmatrix}
+                \alpha_{2} \\
+                \alpha_{1}
+                \end{pmatrix}
+                . \label{eq5}
+                \end{align}
+                Given an energy $E$ and an initial vector $(\alpha_2,\alpha_1)^T$, matrix iteration yields the amplitude at any site $i$. The matrix $T_i$ is called a transfer matrix; it maps the wave-function amplitudes at sites $i-1$ and $i$
+                to those at sites $i$ and $i+1$.
+                Transfer matrices can be used to study the exponential growth or decay of a wave function with distance. For a long chain, directly evaluating
+                $T_L\cdots T_2$ rapidly overflows or underflows, so a QR decomposition is performed at every step. Taking $Q_1=I$, define the recursion
+                \begin{align}
+                T_i Q_{i-1}=Q_iR_i,
+                \end{align}
+                where $Q_i$ is orthogonal and $R_i$ is upper triangular. With repeated orthogonalization, the $a$th Lyapunov exponent is given by the average logarithm of the local stretching factor:
+                \begin{align}
+                \gamma_a=\lim_{L\to\infty}\frac{1}{L}\sum_{i=2}^{L}\ln |(R_i)_{aa}|.
+                \end{align}
+                For the $2\times2$ transfer matrix considered here, $\det T_i=1$, so the two exponents sum to zero and may be written as $\gamma_1=\gamma$ and $\gamma_2=-\gamma$.
+                If $E$ is an eigenenergy within the spectrum, the positive Lyapunov exponent gives the inverse localization length of the wave function:
+                \begin{align}
+                \xi^{-1}(E)=\gamma(E).
+                \end{align}
+                Note that the accumulated quantity is $\ln |(R_i)_{aa}|$, not $\ln |(R_i)_{aa}|^2$; the latter would introduce an extra factor of two. For the standard AAH model,
+                $V_i=V\cos(2\pi\alpha i+\theta)$, the analytical result at energies within the spectrum is
+                \begin{align}
+                \gamma(E)=\max\left\{0,\ln\left|\frac{V}{2t}\right|\right\},
+                \end{align}
+                so the localization transition occurs at $|V|=2|t|$.
 
 
-            <h2 id="metropolis">2. 蒙卡模拟</h2>
+            </p>
+            <h2 id="lyapunov-code">2. QR Algorithm</h2>
             <p>
-                蒙卡的核心思想是重要抽样，这是因为随机抽样得到的很多样本本质是在做无用功，而在高维问题中，要遍历所有可能的状态又是不现实的。实现这一思想的方法是Metropolis算法，其基本流程如下
-            <ol>
-                <li>选定一个初态，计算能量</li>
-                <li>随机翻转某一个自旋，并计算翻转后的能量</li>
-                <li>如果能量降低则保持翻转，如果能量升高则按$e^{- \beta (H' - H)}$概率保持翻转</li>
-                <li>重复以上步骤，可以通过收敛判断，也可以通过设置一个迭代步数</li>
-            </ol>
-            <h2 id="matlab-code">3. 代码</h2>
-            <p>
-                以下 Matlab 代码考虑零外场、周期边界条件，并取 $J=k_B=1$。对每个温度先丢弃一段热化过程，再在测量阶段按固定间隔抽样，计算单位格点绝对磁化强度 $\langle |m|\rangle$。
+                The following Matlab program performs a stepwise QR decomposition at $E=0$ and compares the numerical Lyapunov exponent with the analytical result for the standard AAH model.
             <pre><code class="language-matlab">
-clear; clc; close all
-N = 16;
-J = 1;
-ntherm = 200 * N^2;      % 200 Monte Carlo sweeps for thermalization
-nmeasure = 1000 * N^2;   % 1000 sweeps for measurement
-sample_every = N^2;      % sample once per sweep
-T_sec = 0.1:0.1:5;
+clear; clc; close all;
+t = 1;
+E = 0;
+alpha = (sqrt(5) - 1) / 2;
+theta = 0;
+L = 5e4;
+V_sec = 0:0.05:4;
+gamma_num = zeros(size(V_sec));
 
-m_abs = zeros(size(T_sec));
-aa = 1;
-for T = T_sec
-    % Independent random initial state at each temperature
-    spins = 2 * (rand(N,N) > 0.5) - 1;
+for iv = 1:numel(V_sec)
+    V = V_sec(iv);
+    Q = eye(2);
+    log_growth = zeros(2,1);
 
-    % Thermalization: discarded samples
-    for n = 1:ntherm
-        i = randi([1,N],1,1);
-        j = randi([1,N],1,1);
-        nn = spins(mod(i,N)+1,j) + spins(mod(i-2,N)+1,j) ...
-           + spins(i,mod(j,N)+1) + spins(i,mod(j-2,N)+1);
-        dE = 2 * J * spins(i,j) * nn;
-        if dE <= 0 || rand() < exp(-dE/T)
-            spins(i,j) = -spins(i,j);
-        end
+    for i = 1:L
+        Vi = V * cos(2*pi*alpha*i + theta);
+        Ti = [(Vi-E)/t, -1; 1, 0];
+        [Q,R] = qr(Ti * Q, 0);
+
+        % Fix the arbitrary QR signs so diag(R) is non-negative
+        s = sign(diag(R));
+        s(s == 0) = 1;
+        S = diag(s);
+        Q = Q * S;
+        R = S * R;
+
+        log_growth = log_growth + log(abs(diag(R)));
     end
 
-    % Measurement and statistical average
-    m_sum = 0;
-    nsamples = 0;
-    for n = 1:nmeasure
-        i = randi([1,N],1,1);
-        j = randi([1,N],1,1);
-        nn = spins(mod(i,N)+1,j) + spins(mod(i-2,N)+1,j) ...
-           + spins(i,mod(j,N)+1) + spins(i,mod(j-2,N)+1);
-        dE = 2 * J * spins(i,j) * nn;
-        if dE <= 0 || rand() < exp(-dE/T)
-            spins(i,j) = -spins(i,j);
-        end
-
-        if mod(n, sample_every) == 0
-            m_sum = m_sum + abs(sum(spins(:))) / N^2;
-            nsamples = nsamples + 1;
-        end
-    end
-    m_abs(aa) = m_sum / nsamples;
-    aa = aa + 1;
+    exponents = sort(log_growth / L, 'descend');
+    gamma_num(iv) = max(exponents(1), 0);
 end
 
-% plot
-plot(T_sec, m_abs, 'o-', 'linewidth', 1.5, 'color', 'k')
-xlabel('Temperature','FontSize',15);
-ylabel('&lt;|m|&gt;','FontSize',15)
-</code></pre>
+gamma_exact = max(0, log(max(V_sec, eps) / (2*abs(t))));
+
+plot(V_sec, gamma_num, 'k-', 'LineWidth', 1.5); hold on
+plot(V_sec, gamma_exact, 'r--', 'LineWidth', 1.5);
+xlabel('V/t');
+ylabel('Lyapunov exponent');
+legend('QR numerical', 'AAH exact', 'Location', 'northwest');
+            </code></pre>
 
             <p>
-                热力学极限下，二维方格 Ising 模型的精确临界温度满足
-                $T_c/J=2/\ln(1+\sqrt{2})\approx2.269$。有限尺寸系统不会出现真正的不连续奇点，而是在临界区附近呈现随尺寸变化的平滑交叉；若要精确确定 $T_c$，需要进一步做有限尺寸标度分析。
+                As the chain length increases, the numerical result should approach the analytical curve: for $V<2t$, $\gamma=0$, whereas for $V>2t$,
+                $\gamma=\ln(V/2t)>0$, with the corresponding localization length $\xi=1/\gamma$.
             </p>
 
-            <img src="Ising.png" alt="Ising MC Result"
-                style="display:block; margin:10px auto 0; max-width:600px; width:100%; height:auto;" />
-
-            <h2 id="free-energy">题外话：配分函数和自由能</h2>
-            <p>
-                有了配分函数就可以求出自由能 $F$
-                \begin{align}
-                F = - k_B T \ln Z_{\beta}. \label{eq4}
-                \end{align}
-
-                这可以从定义式出发得到
-                \begin{align}
-                F \equiv U-TS
-                \end{align}
-                其中 $U$ 是平均能量，$S$ 是熵。
-
-                首先有波尔兹曼分布
-                \begin{align}
-                p_s=\frac{e^{-\beta E_s}}{Z}.
-                \end{align}
-                两边取对数
-                \begin{align}
-                \ln p_s = -\beta E_s - \ln Z.
-                \end{align}
-                把它乘上 $-k_B p_s$ 并对所有状态求和
-                \begin{align}
-                -k_B \sum_s p_s \ln p_s
-                = -k_B\sum_s p_s(-\beta E_s-\ln Z)
-                = k_B\beta\sum_s p_s E_s + k_B(\ln Z)\sum_s p_s.
-                \end{align}
-                注意到 $\sum_s p_s E_s = U$（平均能量），$\sum_s p_s = 1$，而左边 $-k_B \sum_s p_s \ln p_s$ 正是统计物理里熵的定义。所以有
-                \begin{align}
-                S = k_B\beta U + k_B\ln Z.
-                \end{align}
-                把它代入自由能定义 $F=U-TS$，并用 $\beta=1/(k_BT)$
-                \begin{align}
-                F = U - T (k_B\beta U + k_B \ln Z)
-                = U - T (\frac{U}{T}+k_B\ln Z )
-                = -k_BT \ln Z.
-                \end{align}
 
 
 
-            </p>
         </article>
     </main>
 

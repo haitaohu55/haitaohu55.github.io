@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="zh-CN" data-note-alternate="phonon-spectrum.en.html">
+<html lang="en" data-note-alternate="phonon-spectrum.html">
 <head>
   <meta charset="UTF-8" />
-  <title>声子谱的计算 - Haitao Hu</title>
+  <title>Phonon Spectrum Calculation - Haitao Hu</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="Note by Haitao Hu" />
 
@@ -151,7 +151,7 @@
     }
   </style>
   <link rel="stylesheet" href="../../assets/site.css" />
-  <link rel="alternate" hreflang="en" href="phonon-spectrum.en.html" />
+  <link rel="alternate" hreflang="zh-CN" href="phonon-spectrum.html" />
 </head>
 
 <body>
@@ -161,17 +161,17 @@
       <div class="site-title">Haitao Hu</div>
       <div class="breadcrumbs">
         <a href="/index.html">Home</a> ·
-        <a href="/notes/dft/index.html">notes on DFT calculations</a> · <span>声子谱的计算</span>
+        <a href="/notes/dft/index.html">notes on DFT calculations</a> · <span>Phonon Spectrum Calculation</span>
       </div>
     </div>
   </header>
 
   <main class="note-layout">
     <article class="note-card">
-      <h1>声子谱的计算</h1>
+      <h1>Phonon Spectrum Calculation</h1>
       <div class="note-meta">
-        <span>发布于 <time id="published-date" datetime="2026-05-17">2026-05-17</time></span>
-        <a class="language-switch" href="phonon-spectrum.en.html" hreflang="en">English</a>
+        <span>Published <time id="published-date" datetime="2026-05-17">2026-05-17</time></span>
+        <a class="language-switch" href="phonon-spectrum.html" hreflang="zh-CN">中文</a>
       </div>
 
       <div class="toc">
@@ -180,45 +180,45 @@
       </div>
 
       <div class="note-content">
-<h2 id="准备">准备</h2>
-<p>首先做结构优化（一般用最小原胞做），然后把新的 <code>CONTCAR</code> 命名为 <code>POSCAR</code>，放进 <code>phonon</code> 文件夹中。</p>
-<p>把模版 <code>band.conf</code>、<code>files</code> 文件夹（包含 <code>INCAR</code> 和 <code>KPOINTS</code>）和 <code>job_phonon.slurm</code> 放进 <code>phonon</code> 文件夹中。</p>
-<p>上传 <code>phonon</code> 到服务器，用 <code>vaspkit 103</code> 生成 <code>POTCAR</code>，放入 <code>files</code> 文件夹。</p>
-<h2 id="用-phonopy-生成位移超胞">用 Phonopy 生成位移超胞</h2>
-<p>进入 <code>phonon</code> 文件夹中，然后用 <code>phonopy</code> 生成位移超胞。在曙光，只要在商店里购买一下。购买后，首先加路径：</p>
+<h2 id="准备">Preparation</h2>
+<p>First optimize the structure, typically using the smallest primitive cell. Then rename the new <code>CONTCAR</code> as <code>POSCAR</code> and place it in the <code>phonon</code> folder.</p>
+<p>Place the <code>band.conf</code> template, the <code>files</code> folder (containing <code>INCAR</code> and <code>KPOINTS</code>), and <code>job_phonon.slurm</code> in the <code>phonon</code> folder.</p>
+<p>Upload <code>phonon</code> to the server, generate <code>POTCAR</code> with <code>vaspkit 103</code>, and place it in the <code>files</code> folder.</p>
+<h2 id="用-phonopy-生成位移超胞">Generate Displaced Supercells with Phonopy</h2>
+<p>Enter the <code>phonon</code> folder and use <code>phonopy</code> to generate displaced supercells. On the Sugon platform, install it from the app store. After installation, first add it to the environment:</p>
 <pre><code>module use /public/software/modules /opt/hpc/software/modules
 source /public/home/chris_55/apprepo/phonopy/2.23.1-py3.12/scripts/env.sh</code></pre>
-<p>然后生成位移超胞，模版命令如下：</p>
+<p>Then generate the displaced supercells with the following command template:</p>
 <pre><code>phonopy -d --dim=&quot;2 1 1&quot; -c POSCAR</code></pre>
-<p>随后在这个文件夹中会生成：</p>
+<p>The following files will then be generated in this folder:</p>
 <ul>
-<li><p><code>SPOSCAR</code>：超胞参考。</p></li>
-<li><p><code>POSCAR-001</code>、<code>POSCAR-002</code> 等：每个是一个位移后的超胞。</p></li>
+<li><p><code>SPOSCAR</code>: the reference supercell.</p></li>
+<li><p><code>POSCAR-001</code>, <code>POSCAR-002</code>, and so on: each file is a displaced supercell.</p></li>
 </ul>
-<h2 id="修改-kpoints">修改 KPOINTS</h2>
-<p><code>KPOINTS</code> 按体系维度可能需要修改，修改后重新上传服务器。</p>
-<h2 id="修改-slurm">修改 slurm</h2>
-<p>用模版 <code>slurm</code> 文件，改一下循环范围：</p>
+<h2 id="修改-kpoints">Modify KPOINTS</h2>
+<p><code>KPOINTS</code> may need to be adjusted according to the dimensionality of the system. Upload the modified file to the server again.</p>
+<h2 id="修改-slurm">Modify the Slurm Script</h2>
+<p>Use the <code>slurm</code> template and adjust the loop range:</p>
 <pre><code>for i in {001..002}</code></pre>
-<p>上传服务器然后提交。</p>
-<h2 id="生成-force-sets">生成 force sets</h2>
-<p>在包含 <code>POSCAR</code>、<code>phonopy.yaml</code>/<code>SPOSCAR</code>，以及各 <code>disp-XXX/vasprun.xml</code> 的目录下执行：</p>
+<p>Upload the file to the server and then submit the job.</p>
+<h2 id="生成-force-sets">Generate FORCE_SETS</h2>
+<p>Run the following command in the directory containing <code>POSCAR</code>, <code>phonopy.yaml</code>/<code>SPOSCAR</code>, and the <code>disp-XXX/vasprun.xml</code> files:</p>
 <pre><code>phonopy --vasp -f disp-*/vasprun.xml</code></pre>
-<p>成功后目录里会出现 <code>FORCE_SETS</code>。</p>
+<p>After the command succeeds, <code>FORCE_SETS</code> will appear in the directory.</p>
 <h2 id="band-conf">band conf</h2>
-<p>用模版 <code>band.conf</code> 文件改一下路径，放入目录下并执行：</p>
+<p>Update the path in the <code>band.conf</code> template, place the file in the directory, and run:</p>
 <pre><code>phonopy -p band.conf</code></pre>
-<p>运行后会得到 <code>band.yaml</code> 文件。</p>
-<h2 id="画图">画图</h2>
-<p>用 <code>phonopy</code> 的 <code>bandplot</code> 函数画图：</p>
+<p>This produces the <code>band.yaml</code> file.</p>
+<h2 id="画图">Plotting</h2>
+<p>Plot the result with the <code>bandplot</code> function provided by <code>phonopy</code>:</p>
 <pre><code>phonopy-bandplot --output band.pdf band.yaml</code></pre>
-<h2 id="分析振动模式">分析振动模式</h2>
-<p>直接用网站：</p>
+<h2 id="分析振动模式">Analyzing Vibrational Modes</h2>
+<p>Use the following website:</p>
 <pre><code>https://henriquemiranda.github.io/phononwebsite/phonon.html</code></pre>
-<p>就可以直接看振动模式。若在某一点出现虚频（负频），说明结构动力学不稳定。</p>
-<h2 id="要点">要点</h2>
+<p>The vibrational modes can then be viewed directly. An imaginary frequency (negative frequency) at any point indicates that the structure is dynamically unstable.</p>
+<h2 id="要点">Key Point</h2>
 <ol>
-<li><p>一般用 primitive 原胞算声子谱，可以用 <code>vaspkit</code> 里的 <code>6-602</code>，从一个传统胞生成最小胞。</p></li>
+<li><p>The phonon spectrum is generally calculated using a primitive cell. In <code>vaspkit</code>, option <code>6-602</code> can generate the smallest cell from a conventional cell.</p></li>
 </ol>
       </div>
     </article>

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN" data-note-alternate="精确对角化.en.html">
+<html lang="en" data-note-alternate="精确对角化.html">
 
 <head>
     <meta charset="UTF-8" />
@@ -218,7 +218,7 @@
         }
     </style>
     <link rel="stylesheet" href="../../assets/site.css" />
-  <link rel="alternate" hreflang="en" href="精确对角化.en.html" />
+  <link rel="alternate" hreflang="zh-CN" href="精确对角化.html" />
 </head>
 
 <body>
@@ -229,17 +229,17 @@
             <div class="breadcrumbs">
                 <a href="/index.html">Home</a> ·
                 <a href="/notes/tb/index.html">notes on Tight-binding models</a> ·
-                <span>精确对角化</span>
+                <span>Exact Diagonalization</span>
             </div>
         </div>
     </header>
 
     <main class="note-layout">
         <article class="note-card">
-            <h1>精确对角化</h1>
+            <h1>Exact Diagonalization</h1>
             <div class="note-meta">
-        <span>发布于 <time id="published-date" datetime="2025-12-23">2025-12-23</time></span>
-        <a class="language-switch" href="精确对角化.en.html" hreflang="en">English</a>
+        <span>Published <time id="published-date" datetime="2025-12-23">2025-12-23</time></span>
+        <a class="language-switch" href="精确对角化.html" hreflang="zh-CN">中文</a>
       </div>
 
             <!-- 自动生成目录 -->
@@ -249,19 +249,19 @@
             </div>
 
             <!-- 正文部分，可随意替换 -->
-            <h2 id="exact-diagonalization">1. 精确对角化</h2>
+            <h2 id="exact-diagonalization">1. Exact Diagonalization</h2>
             <p>
-                我们从定态方程入手
+                We begin with the time-independent Schrödinger equation
                 \begin{align}
                 H \ket{\psi} = E \ket{\psi}
                 , \label{eq1}
                 \end{align}
-                其波函数$\ket{\psi}$可用某一组正交归一基展开
+                The wave function $\ket{\psi}$ can be expanded in an orthonormal basis:
                 \begin{align}
                 \ket{\psi} = \sum_n C_n \ket{n}, \braket{n | m} = \delta_{nm}
                 . \label{eq2}
                 \end{align}
-                于是我们可以得到
+                We therefore obtain
                 \begin{align}
                 H & \ket{\psi} \nonumber \\
                 & \downarrow \nonumber \\
@@ -274,7 +274,7 @@
                 E C_m & = \sum_{n} H_{mn} C_n \nonumber \\
                 \label{eq3}
                 \end{align}
-                写得更形象一点，我们现在就得到了这样的一个式子
+                More explicitly, this gives the matrix equation
                 \begin{equation}
                 \begin{pmatrix}
                 H_{1,1} & H_{1,2} & \cdots & H_{1,N} \\
@@ -298,39 +298,39 @@
                 \end{pmatrix}
                 \label{eq4}
                 \end{equation}
-                对角化哈密顿量矩阵$H$即可得到其本征能。这里的$H_{m,n}$不再是算符，而是做完投影的矩阵元。
-            <h2 id="number-representation">2. 粒子数表象</h2>
+                Diagonalizing the Hamiltonian matrix $H$ yields its eigenenergies. Here, $H_{m,n}$ is no longer an operator but a matrix element obtained after projection onto the chosen basis.
+            <h2 id="number-representation">2. Number Representation</h2>
             <p>
-                考虑一维谐振子哈密顿量
+                Consider the Hamiltonian of a one-dimensional harmonic oscillator:
                 \begin{align}
                 H = \frac{p^2}{2m} + \frac{1}{2}m \omega^2 x^2
                 , \label{eq5}
                 \end{align}
-                引入产生湮灭算符(本质是要把它凑成$a^{\dagger}a + \frac{1}{2}$)
+                We introduce the creation and annihilation operators (essentially to rewrite the Hamiltonian in the form $a^{\dagger}a + \frac{1}{2}$):
                 \begin{align}
                 a & = \sqrt{\frac{m \omega}{2 \hbar}} x + \frac{1}{\sqrt{2 m \hbar \omega}} ip \nonumber \\
                 a^{\dagger} & = \sqrt{\frac{m \omega}{2 \hbar}} x - \frac{1}{\sqrt{2 m \hbar \omega}} ip \nonumber \\
                 \label{eq6}
                 \end{align}
-                哈密顿量就整理为
+                The Hamiltonian can then be rearranged as
                 \begin{align}
                 H =\hbar \omega (a^{\dagger}a + \frac{1}{2})
                 . \label{eq7}
                 \end{align}
-                其中 $a^{\dagger}a$ 就是粒子数算符 $\hat{n}$。
+                where $a^{\dagger}a$ is the number operator $\hat{n}$.
 
-            <h2 id="fermion-chain">3. 费米一维链</h2>
+            <h2 id="fermion-chain">3. One-Dimensional Fermion Chain</h2>
             <p>
-                我们从一维费米链入手，其二次量子化哈密顿量如下
+                We now consider a one-dimensional fermion chain whose second-quantized Hamiltonian is
                 \begin{align}
                 \hat{H} = \sum_{i=1}^L \left[\mu \hat{n}_i + U \hat{n}_i \hat{n}_{i+1}
                 + t (\hat{c}_i^{\dagger} \hat{c}_{i+1} + {\rm H.c.})\right]
                 \end{align}
-                取链长为5，先不考虑相互作用项 $U$(当然你也可以理解为粒子数恒定为1)，考虑周期边界条件，$\hat{H} =$ 的二次型部分可以写成
+                Let the chain length be 5. We first neglect the interaction term $U$ (equivalently, one may consider the sector with exactly one particle) and impose periodic boundary conditions. The quadratic part of $\hat{H} =$ can be written as
                 \begin{align}
                 \hat H = \sum_{i,j} \hat c_i^\dagger h_{ij} \hat c_j
                 \end{align}
-                其中矩阵 $h$ 为
+                where the matrix $h$ is
                 \begin{equation}
                 \begin{array}{c|cccccc}
                 & \hat{c}_1 & \hat{c}_2 & \hat{c}_3 & \hat{c}_4 & \hat{c}_5 \\
@@ -342,10 +342,10 @@
                 \hat{c}_5^{\dagger} & t & 0 & 0 & t & \mu \\
                 \end{array} \label{eq9}
                 \end{equation}
-                注意现在 $\hat{H}$ 还是算符，上式给出的是它在 $\{\hat c_i\}$ 基底下的系数矩阵。接下来我们选定希尔伯特空间为 
+                Note that $\hat{H}$ is still an operator at this stage; the expression above gives its coefficient matrix in the $\{\hat c_i\}$ basis. We next choose the Hilbert space spanned by
                 $$\ket{1,0,0,0,0}, \cdots,
                 \ket{0,0,0,0,1}$$
-                其维度为5，则做完投影后的 $H$ 矩阵与上面是完全一样的，因此熟练了以后我们可以直接写
+                This space has dimension 5. After projection, the matrix $H$ is identical to the one above; once this correspondence is familiar, we may write it directly as
                 \begin{equation}
                 \begin{array}{c|cccccc}
                 & \ket{1,,,,} & \ket{,1,,,} & \ket{,,1,,} & \ket{,,,1,} & \ket{,,,,1} \\
@@ -357,12 +357,12 @@
                 \bra{,,,,1} & t & 0 & 0 & t & \mu \\
                 \end{array} \label{eq10}
                 \end{equation}
-                考虑相互作用后会复杂很多。完整 Fock 空间的维度为 $2^5$。由于哈密顿量守恒总粒子数，它可以分解为互不耦合的粒子数分块，因此可以直接限制在固定粒子数子空间。以粒子数等于2为例，该子空间维度为 $\binom{5}{2}=10$（粒子数为1时相互作用项为0）。此时算符有如下作用规则
+                Including interactions makes the problem considerably more complicated. The full Fock space has dimension $2^5$. Because the Hamiltonian conserves the total particle number, it decomposes into mutually uncoupled particle-number blocks, so we can work directly within a fixed-particle-number subspace. For example, in the two-particle sector the dimension is $\binom{5}{2}=10$ (the interaction term vanishes in the one-particle sector). The operators then act according to
                 \begin{align}
                 c_i \ket{n_1, n_2, \ldots, n_i, \ldots, n_L} = (-1)^{\sum_{j< i} n_j} \sqrt{n_i} \ket{n_1, n_2, \ldots, n_i - 1, \ldots, n_L}
                 \end{align}
-                取基底顺序如下，最后会得到
-                <div class="math-viewport math-viewport--matrix" role="region" aria-label="可横向滚动查看完整矩阵">
+                Using the following ordering of basis states, we obtain
+                <div class="math-viewport math-viewport--matrix" role="region" aria-label="Scroll horizontally to view the complete matrix">
                 \begin{equation}
                 \small
                 \begin{array}{c|cccccccccc}
@@ -381,9 +381,9 @@
                 \bra{,,,1,1} & & & -t & & & & & & t & 2\mu+U \\
                 \end{array} \nonumber
                 \end{equation}
-                <span class="math-viewport__hint" aria-hidden="true">横向滑动查看完整矩阵</span>
+                <span class="math-viewport__hint" aria-hidden="true">Scroll horizontally to view the complete matrix</span>
                 </div>
-                注意，以上都采用 PBC，即默认格点1和格点5之间有跃迁和相互作用。矩阵中跨越边界的跃迁元带有 $-t$，这是在当前 Fock 基底排序下由费米反对易关系产生的符号；对固定偶数粒子数扇区，边界跃迁相对体内跃迁多一个负号。对角化这个矩阵即可得到该粒子数扇区的多体能谱。
+                All expressions above use periodic boundary conditions, so hopping and interactions between sites 1 and 5 are included by default. The matrix elements for hopping across the boundary carry $-t$. With the present ordering of the Fock basis, this sign follows from fermionic anticommutation relations; in a sector with a fixed even particle number, boundary hopping acquires an additional minus sign relative to hopping in the bulk. Diagonalizing this matrix yields the many-body energy spectrum in the chosen particle-number sector.
 
 
 

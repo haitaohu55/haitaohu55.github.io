@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN" data-note-alternate="准周期1.en.html">
+<html lang="en" data-note-alternate="准周期1.html">
 
 <head>
     <meta charset="UTF-8" />
@@ -218,7 +218,7 @@
         }
     </style>
     <link rel="stylesheet" href="../../assets/site.css" />
-  <link rel="alternate" hreflang="en" href="准周期1.en.html" />
+  <link rel="alternate" hreflang="zh-CN" href="准周期1.html" />
 </head>
 
 <body>
@@ -229,17 +229,17 @@
             <div class="breadcrumbs">
                 <a href="/index.html">Home</a> ·
                 <a href="/notes/tb/index.html">notes on Tight-binding models</a> ·
-                <span>准周期1</span>
+                <span>Quasiperiodic Systems I</span>
             </div>
         </div>
     </header>
 
     <main class="note-layout">
         <article class="note-card">
-            <h1>准周期1</h1>
+            <h1>Quasiperiodic Systems I</h1>
             <div class="note-meta">
-        <span>发布于 <time id="published-date" datetime="2025-12-25">2025-12-25</time></span>
-        <a class="language-switch" href="准周期1.en.html" hreflang="en">English</a>
+        <span>Published <time id="published-date" datetime="2025-12-25">2025-12-25</time></span>
+        <a class="language-switch" href="准周期1.html" hreflang="zh-CN">中文</a>
       </div>
 
             <!-- 自动生成目录 -->
@@ -249,52 +249,52 @@
             </div>
 
             <!-- 正文部分，可随意替换 -->
-            <h2 id="introduction">1. 简介</h2>
+            <h2 id="introduction">1. Introduction</h2>
             <p>
-                准周期模型一般指形式如下的模型
+                A quasiperiodic model generally refers to a model of the form
                 \begin{align}
                 H = \sum_i (t_i c_i^{\dagger} c_{i+1} + {\rm H.c.}) + v_i c_i^{\dagger} c_i
                 , \label{eq1}
                 \end{align}
-                其中 $t_i$ 或 $v_i$ 既不像 Anderson 模型那样随机，又不具有通常的晶格平移对称性。以后者为例，固定 $t_i = t$，取 $v_i$ 为某准周期势，如 $v_i = \lambda
+                where neither $t_i$ nor $v_i$ is random as in the Anderson model, yet neither possesses ordinary lattice translational symmetry. Taking the latter as an example, we fix $t_i = t$ and choose $v_i$ to be a quasiperiodic potential, such as $v_i = \lambda
                 {\rm cos}(2 \pi \beta i +
-                \phi)$，$\beta$ 为某无理数，一般取为 $\dfrac{\sqrt{5} -
-                1}{2}$。由于无理数 $\beta$ 的存在，整条链不存在周期性，但格点与格点之间又不是完全没有关联，我们可以理解为所有格点的在位能取一系列存在关联的伪随机数。在这种情况下，特定参数范围内会出现局域态。
+                \phi)$, where $\beta$ is irrational and is commonly chosen as $\dfrac{\sqrt{5} -
+                1}{2}$. Because $\beta$ is irrational, the full chain has no period, although different lattice sites are not entirely uncorrelated. The on-site energies can be viewed as a correlated sequence of pseudorandom numbers. Localized states then appear within certain parameter regimes.
             </p>
-            <h2 id="self-duality">2. 自对偶性</h2>
+            <h2 id="self-duality">2. Self-duality</h2>
             <p>
-                形式如 $v_i = \lambda {\rm cos}(2 \pi \beta n + \phi)$ 的准周期势最早是由 Aubry 和 André 提出来的，所以我们现在一般叫它 AA
-                模型。后来大家发现他本质上对应着 2D Harper 模型，所以也有人叫他 AAH 模型。AAH 模型中一个很有意思的性质是他的自对偶性，
-                即模型哈密顿量在特定参数上的实空间和倒空间形式一致。换句话说就是，AAH 模型在实空间下的哈密顿量
+                The quasiperiodic potential $v_i = \lambda {\rm cos}(2 \pi \beta n + \phi)$ was first proposed by Aubry and André and is therefore commonly known as the AA
+                model. It was later recognized as being essentially related to the two-dimensional Harper model, so it is also called the AAH model. One particularly interesting property of the AAH model is its self-duality:
+                at a specific parameter value, its Hamiltonian has the same form in real and reciprocal space. In other words, starting from the real-space AAH Hamiltonian
                 \begin{equation}
                 H = -t \sum \limits_n (a_n^\dagger a_{n + 1} + {\rm H.c.}) - V \sum \limits_n {\rm cos}(2\pi \alpha
                 n)a_n^\dagger a_n
                 \end{equation}
-                经过如下傅立叶变换
+                and applying the Fourier transform
                 \begin{equation}
                 b_k = \frac{1}{\sqrt{N}} \sum \limits_n e^{i k (2 \pi \alpha n)}a_n
                 \end{equation}
-                可以得到 k 空间下的哈密顿量
+                gives the momentum-space Hamiltonian
                 \begin{equation}
                 H = -\frac{V}{2} \sum \limits_k (b_k^\dagger b_{k + 1} + {\rm H.c.}) - 2t \sum \limits_k {\rm cos}(2\pi
                 \alpha k)b_k^\dagger b_k
                 \end{equation}
-                而你不难发现，当 $|V| = 2|t|$ 时，AAH 模型在傅立叶变换前后形式一致。
+                It is then straightforward to see that, when $|V| = 2|t|$, the AAH model has the same form before and after the Fourier transform.
             </p>
-            <h2 id="localization-transition">3. 自对偶点与局域化转变</h2>
+            <h2 id="localization-transition">3. Self-dual Point and the Localization Transition</h2>
             <p>
-                对标准 AA 模型，自对偶性给出参数空间中的局域化转变点。傅里叶变换交换实空间与对偶空间中的跃迁和准周期势，因此
-                当 $|V|<2|t|$ 时所有本征态均为扩展态；当 $|V|>2|t|$ 时所有本征态均为局域态；在 $|V|=2|t|$ 时所有本征态均为临界态。
-                这里是所有能量的本征态同时发生转变，并不存在把同一能谱中的扩展态与局域态分开的能量迁移率边。广义准周期模型可以出现真正的迁移率边，但需要额外的模型结构，不能仅凭自对偶性一概而论。
+                For the standard AA model, self-duality identifies the localization-transition point in parameter space. The Fourier transform interchanges hopping and the quasiperiodic potential between real and dual space. Consequently,
+                all eigenstates are extended when $|V|<2|t|$, all are localized when $|V|>2|t|$, and all are critical at $|V|=2|t|$.
+                Eigenstates at all energies undergo the transition simultaneously, so there is no energy-dependent mobility edge separating extended and localized states within the same spectrum. Generalized quasiperiodic models can host genuine mobility edges, but these require additional structure and cannot be inferred from self-duality alone.
             </p>
             <p>
-                这一点和传统的 Anderson 模型中的局域化有本质区别。换句话说，当考虑一维系统时
-                加任意小的无关联随机无序都会导致所有单粒子态局域化；
-                而准周期势是确定性的并具有长程关联，随机无序的一参数标度结论不能直接套用，因此系统允许扩展态与有限强度的局域化转变。
+                This behavior differs fundamentally from localization in the conventional Anderson model. In one dimension,
+                arbitrarily weak uncorrelated random disorder localizes every single-particle state.
+                A quasiperiodic potential, by contrast, is deterministic and long-range correlated, so the one-parameter scaling conclusions for random disorder do not apply directly. The system can therefore support extended states and a localization transition at finite potential strength.
             </p>
-            <h2 id="ipr-code">4. 代码</h2>
+            <h2 id="ipr-code">4. Code</h2>
             <p>
-                以下是一个简单的 Matlab 代码计算 AAH 本征态的局域化性质
+                The following simple Matlab program evaluates the localization properties of AAH eigenstates.
             <pre><code class="language-matlab">
 % calculate D2/IPR versus E and V of AA model
 % Date: 2024/03/25   more information in notebook: note10, 20240317
@@ -420,11 +420,11 @@ end
             </code></pre>
 
             <p>
-                结果如图所示，黄色代表较扩展的态，蓝色代表较局域的态，可以看到临界点在 $V = 2t$ 附近。这里的
-                $-\ln({\rm IPR})/\ln L$ 是单一有限尺寸下对相关维数 $D_2$ 的估计；严格的 $D_2$ 需要对多个系统尺寸做标度分析。
+                The result is shown below. Yellow denotes more extended states, whereas blue denotes more localized states, and the critical point can be seen near $V = 2t$. Here,
+                $-\ln({\rm IPR})/\ln L$ is a finite-size estimate of the correlation dimension $D_2$ at a single system size; obtaining a rigorous $D_2$ requires scaling over multiple system sizes.
             </p>
 
-            <img src="AAH1.png" alt="AAH Localization Result"
+            <img src="AAH1.png" alt="Localization result for the AAH model"
                 style="display:block; margin:10px auto 0; max-width:600px; width:100%; height:auto;" />
 
 
