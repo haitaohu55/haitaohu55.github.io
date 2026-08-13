@@ -411,6 +411,10 @@ def main() -> int:
         for marker in NOTE_TYPOGRAPHY_MARKERS:
             if marker not in source:
                 failures.append(f"共享样式缺少照片/笔记排版规则：{marker}")
+        if "grid-template-columns: repeat(2, minmax(0, 1fr));" in source:
+            failures.append("Notes 总览必须纵向排列，不应继续使用双栏分类网格")
+        if ".notes-category:nth-child(3)" in source:
+            failures.append("Notes 总览不应再为 Other 分类设置孤立的跨列规则")
         for token, color in EXPECTED_PALETTE.items():
             declaration = f"{token}: {color};"
             if declaration not in source_lower:
