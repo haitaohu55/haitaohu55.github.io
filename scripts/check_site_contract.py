@@ -14,6 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 REQUIRED_ROOT_PAGES = {
     "index.html",
     "notes.html",
+    "notes.zh.html",
     "publications.html",
 }
 FORBIDDEN_ROOT_PAGES = {"contact.html"}
@@ -32,6 +33,12 @@ NOTE_TYPOGRAPHY_MARKERS = [
     ".notes-preview-list h3",
     ".notes-excerpt",
     ".notes-more",
+    ".notes-landing-header",
+    ".notes-summary",
+    ".notes-entry-heading",
+    ".notes-date",
+    ".notes-read",
+    ".notes-archive-list",
     ".toc a",
     ".note-card h3",
     ".note-card > h2:first-of-type",
@@ -53,6 +60,12 @@ NOTES_CATEGORIES = {
     "dft": Path("notes/dft/index.html"),
     "tb": Path("notes/tb/index.html"),
     "other": Path("notes/other/index.html"),
+}
+NOTES_DIRECTORY_PAIRS = {
+    Path("notes.html"): Path("notes.zh.html"),
+    Path("notes/dft/index.html"): Path("notes/dft/index.zh.html"),
+    Path("notes/tb/index.html"): Path("notes/tb/index.zh.html"),
+    Path("notes/other/index.html"): Path("notes/other/index.zh.html"),
 }
 NOTE_PAIRS = {
     Path("notes/dft/linux.html"): (Path("notes/dft/linux.en.html"), "zh-CN", "en", "2025-12-25"),
@@ -167,6 +180,7 @@ class PageParser(HTMLParser):
         self.notes_category: str | None = None
         self.notes_preview_links: dict[str, list[tuple[str, int]]] = {}
         self.notes_preview_depth = 0
+        self.notes_preview_stack: list[str] = []
         self.notes_excerpt_count: dict[str, int] = {}
         self.notes_more_hrefs: dict[str, list[str]] = {}
         self.images: list[dict[str, str]] = []
@@ -216,8 +230,11 @@ class PageParser(HTMLParser):
             self.notes_preview_links.setdefault(self.notes_category, [])
             self.notes_more_hrefs.setdefault(self.notes_category, [])
             self.notes_excerpt_count.setdefault(self.notes_category, 0)
-        if "notes-preview" in classes:
+        if self.notes_preview_depth and tag == "div":
+            self.notes_preview_stack.append("div")
+        if tag == "div" and "notes-preview" in classes:
             self.notes_preview_depth += 1
+            self.notes_preview_stack.append("preview")
         if (
             tag == "p"
             and self.notes_category
@@ -273,8 +290,10 @@ class PageParser(HTMLParser):
             self.heading_level = 0
         if tag == "article" and self.notes_category is not None:
             self.notes_category = None
-        if tag == "div" and self.notes_preview_depth:
-            self.notes_preview_depth -= 1
+        if tag == "div" and self.notes_preview_stack:
+            marker = self.notes_preview_stack.pop()
+            if marker == "preview":
+                self.notes_preview_depth -= 1
 
     def handle_data(self, data: str) -> None:
         if self.time_attributes is not None:
@@ -318,7 +337,7 @@ def managed_note_hrefs(path: Path) -> list[str]:
     parser = PageParser()
     parser.feed(managed)
     parser.close()
-    return parser.hrefs
+    return list(dict.fromkeys(parser.hrefs))
 
 
 def math_blocks(source: str) -> list[str]:
@@ -432,6 +451,25 @@ def main() -> int:
             f"Notes 页分类不符：{sorted(notes.notes_preview_links)}"
         )
 
+    for english_relative, chinese_relative in NOTES_DIRECTORY_PAIRS.items():
+        english = parse(ROOT / english_relative)
+        chinese = parse(ROOT / chinese_relative)
+        if english.html_lang != "en" or chinese.html_lang != "zh-CN":
+            failures.append(f"Notes 双语目录语言标记不符：{english_relative}")
+        if english.html_attributes.get("data-note-alternate") != chinese_relative.name:
+            failures.append(f"Notes 英文目录缺少正确中文互链：{english_relative}")
+        if chinese.html_attributes.get("data-note-alternate") != english_relative.name:
+            failures.append(f"Notes 中文目录缺少正确英文互链：{chinese_relative}")
+        for page, relative, label in (
+            (english, english_relative, "English"),
+            (chinese, chinese_relative, "中文"),
+        ):
+            page_text = " ".join(page.all_text)
+            if "Language" not in page_text or label not in page_text:
+                failures.append(f"Notes 双语目录缺少语言菜单：{english_relative}")
+            if "notes-excerpt" not in (ROOT / relative).read_text(encoding="utf-8"):
+                failures.append(f"Notes 双语目录缺少笔记简介：{english_relative}")
+
     sync_script = ROOT / "scripts" / "sync_tex_note.py"
     if not sync_script.is_file():
         failures.append("缺少笔记同步脚本：scripts/sync_tex_note.py")
@@ -440,7 +478,8 @@ def main() -> int:
         for marker in (
             "NOTES_PREVIEW_LIMIT = 3",
             "def update_notes_overview()",
-            "overview_path = update_notes_overview()",
+            "overview_paths = update_notes_overview()",
+            'build_archive_block(sorted_entries, category, "zh-CN")',
             "def resolve_published_date(",
         ):
             if marker not in sync_source:
@@ -542,7 +581,7 @@ def main() -> int:
         "// NOTE-CATALOG:END",
         'menuButton.textContent = "Language"',
         'pagination.className = "note-pagination"',
-        'allNotes.href = "../../notes.html"',
+        'allNotes.href = isChinese ? "../../notes.zh.html" : "../../notes.html"',
         'home.href = "../../index.html"',
     ):
         if marker not in note_script_source:

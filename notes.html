@@ -1,79 +1,88 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-note-alternate="notes.zh.html">
 <head>
   <meta charset="UTF-8" />
   <title>Notes - Haitao Hu</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="Physics and computational notes by Haitao Hu." />
+  <link rel="alternate" hreflang="zh-CN" href="notes.zh.html" />
   <link rel="stylesheet" href="assets/site.css" />
 </head>
 
 <body>
   <header>
-    <div class="nav-container nav-container-primary">
-      <div class="site-identity">
-        <div class="site-title"><a href="index.html">Haitao Hu</a></div>
-        <div class="site-context">Condensed Matter Physics · USTC</div>
-      </div>
-      <nav aria-label="Primary navigation">
-        <a href="notes.html" aria-current="page">Notes</a>
-        <a href="publications.html">Publications</a>
-        <a href="index.html#contact">Contact</a>
-      </nav>
+    <div class="nav-container note-nav">
+      <div class="site-title"><a href="index.html">Haitao Hu</a></div>
+      <div class="breadcrumbs"><a href="index.html">Home</a> · <span>Notes</span></div>
+      <details class="language-menu">
+        <summary aria-label="Choose language">Language</summary>
+        <div class="language-options">
+          <a class="language-switch" href="notes.zh.html" hreflang="zh-CN">中文</a>
+          <span lang="en" aria-current="page">English</span>
+        </div>
+      </details>
     </div>
   </header>
 
   <main>
     <section>
-      <h1>Notes</h1>
-      <p class="page-intro">
-        A growing collection of short research and technical notes.
-      </p>
+      <div class="notes-landing-header">
+        <h1>Notes</h1>
+        <p class="page-intro">Research notes on computational condensed matter physics, numerical models, and the tools used along the way.</p>
+        <p class="notes-summary">9 notes · 3 collections · Updated 10 August 2026</p>
+      </div>
       <!-- NOTES-PREVIEW:START -->
       <div class="notes-directory">
         <article class="notes-category" data-category="dft">
-          <h2><a href="notes/dft/index.html">DFT calculations</a></h2>
+          <h2 class="notes-category-heading"><a href="notes/dft/index.html">DFT calculations</a><span class="notes-count">3 notes</span></h2>
           <div class="notes-preview-list">
             <div class="notes-preview">
-              <h3><a class="notes-preview-title" href="notes/dft/phonon-spectrum.html">声子谱的计算</a></h3>
-              <p class="notes-excerpt">首先做结构优化（一般用最小原胞做），然后把新的 CONTCAR 命名为 POSCAR，放进 phonon 文件夹中。</p>
+              <div class="notes-entry-heading"><h3><a class="notes-preview-title" href="notes/dft/phonon-spectrum.en.html">Phonon Spectrum Calculation</a></h3><time class="notes-date" datetime="2026-05-17">17 May 2026</time></div>
+              <p class="notes-excerpt">First optimize the structure, typically using the smallest primitive cell. Then rename the new CONTCAR as POSCAR and place it in the phonon folder.</p>
+              <a class="notes-read" href="notes/dft/phonon-spectrum.en.html">Read note →</a>
             </div>
             <div class="notes-preview">
-              <h3><a class="notes-preview-title" href="notes/dft/linux.html">Some common linux commands</a></h3>
-              <p class="notes-excerpt">1. 文件管理 · 2. 查看与搜索文件内容 · 3. 简单编辑：vim / vi</p>
+              <div class="notes-entry-heading"><h3><a class="notes-preview-title" href="notes/dft/linux.en.html">Some common Linux commands</a></h3><time class="notes-date" datetime="2025-12-25">25 December 2025</time></div>
+              <p class="notes-excerpt">File management, viewing and searching file contents, and basic editing with vim or vi.</p>
+              <a class="notes-read" href="notes/dft/linux.en.html">Read note →</a>
             </div>
             <div class="notes-preview">
-              <h3><a class="notes-preview-title" href="notes/dft/opt.html">Structure optimization using VASP</a></h3>
+              <div class="notes-entry-heading"><h3><a class="notes-preview-title" href="notes/dft/opt.html">Structure Optimization using VASP</a></h3><time class="notes-date" datetime="2025-12-20">20 December 2025</time></div>
               <p class="notes-excerpt">Structure optimization aims to find atomic positions R_i that minimize the total energy E(R_i) or make all forces smaller than a given threshold, e.g. |F_i| &lt; 0.01 eV/Å.</p>
+              <a class="notes-read" href="notes/dft/opt.html">Read note →</a>
             </div>
           </div>
         </article>
 
         <article class="notes-category" data-category="tb">
-          <h2><a href="notes/tb/index.html">Tight-binding calculations</a></h2>
+          <h2 class="notes-category-heading"><a href="notes/tb/index.html">Tight-binding calculations</a><span class="notes-count">5 notes</span></h2>
           <div class="notes-preview-list">
             <div class="notes-preview">
-              <h3><a class="notes-preview-title" href="notes/tb/准周期2.html">准周期模型</a></h3>
-              <p class="notes-excerpt">考虑一维最近邻紧束缚模型</p>
+              <div class="notes-entry-heading"><h3><a class="notes-preview-title" href="notes/tb/准周期2.en.html">Quasiperiodic Systems II</a></h3><time class="notes-date" datetime="2026-08-10">10 August 2026</time></div>
+              <p class="notes-excerpt">A one-dimensional nearest-neighbor tight-binding model and its localization properties.</p>
+              <a class="notes-read" href="notes/tb/准周期2.en.html">Read note →</a>
             </div>
             <div class="notes-preview">
-              <h3><a class="notes-preview-title" href="notes/tb/准周期1.html">准周期模型简介</a></h3>
-              <p class="notes-excerpt">准周期模型一般指形式如下的模型</p>
+              <div class="notes-entry-heading"><h3><a class="notes-preview-title" href="notes/tb/准周期1.en.html">Quasiperiodic Systems I</a></h3><time class="notes-date" datetime="2025-12-25">25 December 2025</time></div>
+              <p class="notes-excerpt">An introduction to quasiperiodic models and their standard tight-binding form.</p>
+              <a class="notes-read" href="notes/tb/准周期1.en.html">Read note →</a>
             </div>
             <div class="notes-preview">
-              <h3><a class="notes-preview-title" href="notes/tb/二次量子化.html">二次量子化</a></h3>
-              <p class="notes-excerpt">1. 有限差分法离散化哈密顿量</p>
+              <div class="notes-entry-heading"><h3><a class="notes-preview-title" href="notes/tb/二次量子化.en.html">Second Quantization</a></h3><time class="notes-date" datetime="2025-12-23">23 December 2025</time></div>
+              <p class="notes-excerpt">Discretizing the Hamiltonian by finite differences and expressing it in second-quantized form.</p>
+              <a class="notes-read" href="notes/tb/二次量子化.en.html">Read note →</a>
             </div>
           </div>
           <a class="notes-more" href="notes/tb/index.html">More …</a>
         </article>
 
         <article class="notes-category" data-category="other">
-          <h2><a href="notes/other/index.html">Other notes</a></h2>
+          <h2 class="notes-category-heading"><a href="notes/other/index.html">Other notes</a><span class="notes-count">1 note</span></h2>
           <div class="notes-preview-list">
             <div class="notes-preview">
-              <h3><a class="notes-preview-title" href="notes/other/git.html">git</a></h3>
-              <p class="notes-excerpt">Git 是一种运行在个人电脑上的记录文件变化的工具，由 Linux 之父 Linus Torvalds 开发。也有人叫他分布式版本控制系统，这里的分布式指的是每个开发者本地都有一个完整的代码仓库。</p>
+              <div class="notes-entry-heading"><h3><a class="notes-preview-title" href="notes/other/git.en.html">git</a></h3><time class="notes-date" datetime="2026-03-05">5 March 2026</time></div>
+              <p class="notes-excerpt">Git is a tool that runs on a personal computer and records changes to files. It was developed by Linus Torvalds, the creator of Linux. Git is also described as a distributed version-control system: “distributed” means that every developer has a complete copy of the repository locally.</p>
+              <a class="notes-read" href="notes/other/git.en.html">Read note →</a>
             </div>
           </div>
         </article>
@@ -85,6 +94,9 @@
   <footer>© <span id="year"></span> Haitao Hu</footer>
   <script>
     document.getElementById("year").textContent = new Date().getFullYear();
+    document.querySelectorAll(".language-switch").forEach((link) => {
+      link.addEventListener("click", () => link.closest("details")?.removeAttribute("open"));
+    });
   </script>
 </body>
 </html>

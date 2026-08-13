@@ -1,130 +1,35 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-note-alternate="index.zh.html">
 <head>
   <meta charset="UTF-8" />
   <title>Other Notes - Haitao Hu</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Other notes by Haitao Hu" />
-
-  <style>
-    body {
-      margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      line-height: 1.6;
-      color: #222;
-      background-color: #f5f5f5;
-    }
-
-    a {
-      color: #0077cc;
-      text-decoration: none;
-    }
-
-    a:hover {
-      text-decoration: underline;
-    }
-
-    header {
-      background: #111827;
-      color: #f9fafb;
-      padding: 16px 24px;
-      position: sticky;
-      top: 0;
-      z-index: 10;
-    }
-
-    .nav-container {
-      max-width: 900px;
-      margin: 0 auto;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
-    .site-title {
-      font-size: 20px;
-      font-weight: 600;
-    }
-
-    main {
-      max-width: 900px;
-      margin: 24px auto 40px auto;
-      padding: 0 16px;
-    }
-
-    section {
-      background: #ffffff;
-      border-radius: 8px;
-      padding: 20px 24px;
-      margin-bottom: 20px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
-    }
-
-    h1 {
-      margin-top: 0;
-      font-size: 28px;
-      margin-bottom: 4px;
-    }
-
-    footer {
-      text-align: center;
-      color: #6b7280;
-      font-size: 12px;
-      margin-bottom: 20px;
-    }
-
-    @media (max-width: 600px) {
-      header {
-        padding: 12px 16px;
-      }
-
-      .site-title {
-        font-size: 18px;
-      }
-
-      main {
-        margin-top: 16px;
-      }
-    }
-  </style>
+  <meta name="description" content="Technical notes outside the main physics collections by Haitao Hu." />
+  <link rel="alternate" hreflang="zh-CN" href="index.zh.html" />
   <link rel="stylesheet" href="../../assets/site.css" />
 </head>
 <body>
   <header>
-    <div class="nav-container">
-      <div class="site-title">Haitao Hu</div>
-      <div class="breadcrumbs">
-        <a href="../../index.html">Home</a> ·
-        <span>other notes</span>
-      </div>
+    <div class="nav-container note-nav">
+      <div class="site-title"><a href="../../index.html">Haitao Hu</a></div>
+      <div class="breadcrumbs"><a href="../../index.html">Home</a> · <a href="../../notes.html">Notes</a> · <span>Other notes</span></div>
+      <details class="language-menu"><summary aria-label="Choose language">Language</summary><div class="language-options"><a class="language-switch" href="index.zh.html" hreflang="zh-CN">中文</a><span lang="en" aria-current="page">English</span></div></details>
     </div>
   </header>
-
   <main>
-    <section>
-      <h1>Other notes</h1>
-      <p>Here I collect notes outside DFT and Tight-binding topics.</p>
-
+    <section class="notes-archive">
+      <div class="notes-landing-header"><h1>Other notes</h1><p class="page-intro">Technical notes that support research work but sit outside the main physics collections.</p><p class="notes-summary">1 note · Most recent 5 March 2026</p></div>
       <!-- AUTO-NOTES:START -->
-      <ul id="managed-notes-list">
-        <li data-created="2026-03-05T15:03:52+08:00">
-          <a href="git.html">
-            git
-          </a>
+      <ol id="managed-notes-list" class="notes-archive-list">
+        <li class="notes-archive-entry" data-created="2026-03-05T15:03:52+08:00">
+          <div class="notes-entry-heading"><h2><a href="git.en.html">git</a></h2><time class="notes-date" datetime="2026-03-05">5 March 2026</time></div>
+          <p class="notes-excerpt">Git is a tool that runs on a personal computer and records changes to files. It was developed by Linus Torvalds, the creator of Linux. Git is also described as a distributed version-control system: “distributed” means that every developer has a complete copy of the repository locally.</p><a class="notes-read" href="git.en.html">Read note →</a>
         </li>
-      </ul>
+      </ol>
 <!-- AUTO-NOTES:END -->
     </section>
   </main>
-
-  <footer>
-    © <span id="year"></span> Haitao Hu
-  </footer>
-
-  <script>
-    document.getElementById("year").textContent = new Date().getFullYear();
-  </script>
+  <footer>© <span id="year"></span> Haitao Hu</footer>
+  <script src="../../assets/note-page.js"></script>
 </body>
 </html>

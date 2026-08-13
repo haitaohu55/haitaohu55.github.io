@@ -203,6 +203,10 @@
   const currentFilename = decodeURIComponent(
     window.location.pathname.split("/").pop() || ""
   );
+  const categoryBreadcrumb = document.querySelector(".breadcrumbs a[href='index.html']");
+  if (categoryBreadcrumb && isChinese) {
+    categoryBreadcrumb.href = "index.zh.html";
+  }
   const catalogMatch = Object.entries(noteCatalog).find(([, entries]) =>
     entries.some((entry) => entry.zh === currentFilename || entry.en === currentFilename)
   );
@@ -245,7 +249,7 @@
     const exits = document.createElement("div");
     exits.className = "note-pagination__exits";
     const allNotes = document.createElement("a");
-    allNotes.href = "../../notes.html";
+    allNotes.href = isChinese ? "../../notes.zh.html" : "../../notes.html";
     allNotes.textContent = labels.all;
     const home = document.createElement("a");
     home.href = "../../index.html";

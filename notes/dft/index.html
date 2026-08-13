@@ -1,197 +1,56 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="en" data-note-alternate="index.zh.html">
 <head>
   <meta charset="UTF-8" />
-  <title>DFT Notes - Haitao Hu</title>
+  <title>DFT Calculations - Haitao Hu</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="DFT / VASP / Phonopy notes by Haitao Hu" />
-
-  <style>
-    body {
-      margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      line-height: 1.6;
-      color: #222;
-      background-color: #f5f5f5;
-    }
-
-    a {
-      color: #0077cc;
-      text-decoration: none;
-    }
-
-    a:hover {
-      text-decoration: underline;
-    }
-
-    /* ===== 顶部导航栏 ===== */
-    header {
-      background: #111827;
-      color: #f9fafb;
-      padding: 16px 24px;
-      position: sticky;
-      top: 0;
-      z-index: 10;
-    }
-
-    .nav-container {
-      max-width: 900px;
-      margin: 0 auto;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
-    .site-title {
-      font-size: 20px;
-      font-weight: 600;
-    }
-
-    nav a {
-      margin-left: 16px;
-      font-size: 14px;
-    }
-
-    /* ===== 主体内容 ===== */
-    main {
-      max-width: 900px;
-      margin: 24px auto 40px auto;
-      padding: 0 16px;
-    }
-
-    section {
-      background: #ffffff;
-      border-radius: 8px;
-      padding: 20px 24px;
-      margin-bottom: 20px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
-    }
-
-    h1,
-    h2 {
-      margin-top: 0;
-    }
-
-    h1 {
-      font-size: 28px;
-      margin-bottom: 4px;
-    }
-
-    .subtitle {
-      color: #4b5563;
-      font-size: 15px;
-    }
-
-    h2 {
-      font-size: 20px;
-      margin-bottom: 8px;
-      border-left: 4px solid #2563eb;
-      padding-left: 8px;
-    }
-
-    ul {
-      padding-left: 20px;
-      margin-top: 4px;
-    }
-
-    .tag-list span {
-      display: inline-block;
-      background: #e5e7eb;
-      border-radius: 999px;
-      padding: 2px 10px;
-      font-size: 12px;
-      margin: 2px 4px 2px 0;
-    }
-
-    .two-column {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 24px;
-    }
-
-    .col {
-      flex: 1 1 260px;
-    }
-
-    .contact-list div {
-      margin-bottom: 4px;
-    }
-
-    footer {
-      text-align: center;
-      color: #6b7280;
-      font-size: 12px;
-      margin-bottom: 20px;
-    }
-
-    @media (max-width: 600px) {
-      header {
-        padding: 12px 16px;
-      }
-
-      .site-title {
-        font-size: 18px;
-      }
-
-      main {
-        margin-top: 16px;
-      }
-    }
-  </style>
+  <meta name="description" content="Notes on first-principles calculations with VASP and Phonopy by Haitao Hu." />
+  <link rel="alternate" hreflang="zh-CN" href="index.zh.html" />
   <link rel="stylesheet" href="../../assets/site.css" />
 </head>
-
 <body>
   <header>
-    <div class="nav-container">
-      <div class="site-title">Haitao Hu</div>
-      <div class="breadcrumbs">
-        <a href="../../index.html">Home</a> ·
-        <span>notes on DFT calculations</span>
-      </div>
+    <div class="nav-container note-nav">
+      <div class="site-title"><a href="../../index.html">Haitao Hu</a></div>
+      <div class="breadcrumbs"><a href="../../index.html">Home</a> · <a href="../../notes.html">Notes</a> · <span>DFT calculations</span></div>
+      <details class="language-menu">
+        <summary aria-label="Choose language">Language</summary>
+        <div class="language-options">
+          <a class="language-switch" href="index.zh.html" hreflang="zh-CN">中文</a>
+          <span lang="en" aria-current="page">English</span>
+        </div>
+      </details>
     </div>
   </header>
 
   <main>
-    <section>
-      <h1>DFT calculations</h1>
-      <p>
-        Here I collect some short notes related to density functional theory (DFT) calculations.
-      </p>
+    <section class="notes-archive">
+      <div class="notes-landing-header">
+        <h1>DFT calculations</h1>
+        <p class="page-intro">Short notes on first-principles calculations with VASP and Phonopy, from structural optimization to phonon spectra and practical Linux workflows.</p>
+        <p class="notes-summary">3 notes · Most recent 17 May 2026</p>
+      </div>
 
       <!-- AUTO-NOTES:START -->
-      <ul id="managed-notes-list">
-        <li data-created="2026-05-17T22:13:41+08:00">
-          <a href="phonon-spectrum.html">
-            声子谱的计算
-          </a>
+      <ol id="managed-notes-list" class="notes-archive-list">
+        <li class="notes-archive-entry" data-created="2026-05-17T22:13:41+08:00">
+          <div class="notes-entry-heading"><h2><a href="phonon-spectrum.en.html">Phonon Spectrum Calculation</a></h2><time class="notes-date" datetime="2026-05-17">17 May 2026</time></div>
+          <p class="notes-excerpt">First optimize the structure, typically using the smallest primitive cell. Then rename the new CONTCAR as POSCAR and place it in the phonon folder.</p><a class="notes-read" href="phonon-spectrum.en.html">Read note →</a>
         </li>
-        <li data-created="2025-12-25T23:57:54+08:00">
-          <a href="linux.html">
-            Some common linux commands
-          </a>
+        <li class="notes-archive-entry" data-created="2025-12-25T23:57:54+08:00">
+          <div class="notes-entry-heading"><h2><a href="linux.en.html">Some common Linux commands</a></h2><time class="notes-date" datetime="2025-12-25">25 December 2025</time></div>
+          <p class="notes-excerpt">File management, viewing and searching file contents, and basic editing with vim or vi.</p><a class="notes-read" href="linux.en.html">Read note →</a>
         </li>
-        <li data-created="2025-12-20T01:17:29+08:00">
-          <a href="opt.html">
-            Structure optimization using VASP
-          </a>
+        <li class="notes-archive-entry" data-created="2025-12-20T01:17:29+08:00">
+          <div class="notes-entry-heading"><h2><a href="opt.html">Structure Optimization using VASP</a></h2><time class="notes-date" datetime="2025-12-20">20 December 2025</time></div>
+          <p class="notes-excerpt">Structure optimization aims to find atomic positions R_i that minimize the total energy E(R_i) or make all forces smaller than a given threshold, e.g. |F_i| &lt; 0.01 eV/Å.</p><a class="notes-read" href="opt.html">Read note →</a>
         </li>
-      </ul>
-      <!-- AUTO-NOTES:END -->
+      </ol>
+<!-- AUTO-NOTES:END -->
     </section>
   </main>
 
-    <footer>
-      © <span id="year"></span> Haitao Hu
-    </footer>
-
-    <script>
-      // 自动更新年份
-      document.getElementById('year').textContent = new Date().getFullYear();
-    </script>
+  <footer>© <span id="year"></span> Haitao Hu</footer>
+  <script src="../../assets/note-page.js"></script>
 </body>
-
 </html>

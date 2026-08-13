@@ -16,6 +16,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 TEMPLATE_PATH = ROOT / "templates" / "note_page.html"
 NOTES_OVERVIEW_PATH = ROOT / "notes.html"
+NOTES_OVERVIEW_ZH_PATH = ROOT / "notes.zh.html"
 START_MARKER = "<!-- AUTO-NOTES:START -->"
 END_MARKER = "<!-- AUTO-NOTES:END -->"
 OVERVIEW_START_MARKER = "<!-- NOTES-PREVIEW:START -->"
@@ -30,21 +31,27 @@ NOTES_PREVIEW_LIMIT = 3
 CATEGORY_CONFIG = {
     "dft": {
         "index_path": ROOT / "notes" / "dft" / "index.html",
+        "zh_index_path": ROOT / "notes" / "dft" / "index.zh.html",
         "index_href": "index.html",
         "label": "notes on DFT calculations",
         "overview_label": "DFT calculations",
+        "zh_overview_label": "DFT 计算",
     },
     "tb": {
         "index_path": ROOT / "notes" / "tb" / "index.html",
+        "zh_index_path": ROOT / "notes" / "tb" / "index.zh.html",
         "index_href": "index.html",
         "label": "notes on Tight-binding models",
         "overview_label": "Tight-binding calculations",
+        "zh_overview_label": "紧束缚模型",
     },
     "other": {
         "index_path": ROOT / "notes" / "other" / "index.html",
+        "zh_index_path": ROOT / "notes" / "other" / "index.zh.html",
         "index_href": "index.html",
         "label": "other notes",
         "overview_label": "Other notes",
+        "zh_overview_label": "其他笔记",
     },
 }
 
@@ -172,6 +179,8 @@ def extract_entries_from_html_block(block: str, default_created: str) -> dict[st
             slug = slug_from_href(href)
             if not slug:
                 continue
+            if slug.endswith((".en", ".zh")):
+                slug = slug.rsplit(".", 1)[0]
             title = normalize_text(link_match.group(2))
             created_match = re.search(r'data-created="([^"]+)"', attrs)
             created = created_match.group(1).strip() if created_match else default_created
@@ -213,6 +222,33 @@ def build_managed_block(entries: list[NoteEntry]) -> str:
             END_MARKER,
         ]
     )
+    return "\n".join(lines)
+
+
+def build_archive_block(entries: list[NoteEntry], category: str, language: str = "en") -> str:
+    """Build a rich category archive from paired note metadata."""
+    category_dir = CATEGORY_CONFIG[category]["index_path"].parent
+    lines = [START_MARKER, '      <ol id="managed-notes-list" class="notes-archive-list">']
+    for entry in entries:
+        original_path = category_dir / f"{entry.slug}.html"
+        original_lang, alternate_filename, _ = note_page_metadata(original_path)
+        target_filename = original_path.name if original_lang == language else alternate_filename
+        target_path = category_dir / target_filename
+        _, _, target_title = note_page_metadata(target_path)
+        excerpt = html.escape(polished_excerpt(target_path))
+        published = entry.created[:10]
+        published_label = (
+            dt.date.fromisoformat(published).strftime("%-d %B %Y")
+            if language == "en" else published
+        )
+        read_label = "Read note →" if language == "en" else "阅读笔记 →"
+        lines.extend([
+            f'        <li class="notes-archive-entry" data-created="{html.escape(entry.created, quote=True)}">',
+            f'          <div class="notes-entry-heading"><h2><a href="{html.escape(target_filename, quote=True)}">{html.escape(target_title)}</a></h2><time class="notes-date" datetime="{published}">{published_label}</time></div>',
+            f'          <p class="notes-excerpt">{excerpt}</p><a class="notes-read" href="{html.escape(target_filename, quote=True)}">{read_label}</a>',
+            "        </li>",
+        ])
+    lines.extend(["      </ol>", END_MARKER])
     return "\n".join(lines)
 
 
@@ -297,36 +333,79 @@ def excerpt_from_note(path: Path) -> str:
     raise RuntimeError(f"无法从笔记正文提取摘要：{path}")
 
 
-def build_overview_block() -> str:
+def polished_excerpt(path: Path) -> str:
+    """Keep directory excerpts concise when a note begins with a heading-only outline."""
+    excerpt = excerpt_from_note(path)
+    replacements = {
+        "1. File Management · 2. Viewing and Searching File Contents · 3. Basic Editing: vim / vi":
+            "File management, viewing and searching file contents, and basic editing with vim or vi.",
+        "1. Discretizing the Hamiltonian by Finite Differences":
+            "Discretizing the Hamiltonian by finite differences and expressing it in second-quantized form.",
+        "1. The Ising Model · 2. Monte Carlo Simulation · 3. Code":
+            "The Ising model, Monte Carlo simulation, and an accompanying numerical implementation.",
+        "1. Exact Diagonalization · 2. Number Representation · 3. One-Dimensional Fermion Chain":
+            "Exact diagonalization in the particle-number representation, with a one-dimensional fermion chain as an example.",
+        "Consider a one-dimensional nearest-neighbor tight-binding model,":
+            "A one-dimensional nearest-neighbor tight-binding model and its localization properties.",
+        "A quasiperiodic model generally refers to a model of the form":
+            "An introduction to quasiperiodic models and their standard tight-binding form.",
+        "1. 文件管理 · 2. 查看与搜索文件内容 · 3. 简单编辑：vim / vi":
+            "文件管理、文件内容的查看与搜索，以及 vim / vi 的基础编辑操作。",
+        "1. 有限差分法离散化哈密顿量":
+            "用有限差分法离散化哈密顿量，并写成二次量子化形式。",
+        "1. Ising 模型 · 2. 蒙卡模拟 · 3. 代码":
+            "Ising 模型、蒙特卡洛模拟及相应的数值实现。",
+        "1. 精确对角化 · 2. 粒子数表象 · 3. 费米一维链":
+            "粒子数表象中的精确对角化，并以费米一维链为例。",
+        "考虑一维最近邻紧束缚模型":
+            "考虑一维最近邻紧束缚模型，并讨论它的局域化性质。",
+        "准周期模型一般指形式如下的模型":
+            "介绍准周期模型及其常见的紧束缚表达形式。",
+    }
+    return replacements.get(excerpt, excerpt)
+
+
+def build_overview_block(language: str = "en") -> str:
     lines = [OVERVIEW_START_MARKER, '      <div class="notes-directory">']
     for category, config in CATEGORY_CONFIG.items():
         entries = read_category_entries(category)
-        category_href = html.escape(
-            config["index_path"].relative_to(ROOT).as_posix(), quote=True
+        index_path = config["index_path"] if language == "en" else config["zh_index_path"]
+        category_href = html.escape(index_path.relative_to(ROOT).as_posix(), quote=True)
+        category_label = config["overview_label"] if language == "en" else config["zh_overview_label"]
+        count_label = (
+            f'{len(entries)} {"note" if len(entries) == 1 else "notes"}'
+            if language == "en" else f"{len(entries)} 篇笔记"
         )
         lines.extend(
             [
                 f'        <article class="notes-category" data-category="{category}">',
-                f'          <h2><a href="{category_href}">{html.escape(config["overview_label"])}</a></h2>',
+                f'          <h2 class="notes-category-heading"><a href="{category_href}">{html.escape(category_label)}</a><span class="notes-count">{count_label}</span></h2>',
                 '          <div class="notes-preview-list">',
             ]
         )
         for entry in entries[:NOTES_PREVIEW_LIMIT]:
-            note_path = config["index_path"].parent / f"{entry.slug}.html"
+            original_path = config["index_path"].parent / f"{entry.slug}.html"
+            original_lang, alternate_filename, _ = note_page_metadata(original_path)
+            note_path = original_path if original_lang == language else original_path.parent / alternate_filename
+            _, _, title = note_page_metadata(note_path)
             href = html.escape(note_path.relative_to(ROOT).as_posix(), quote=True)
-            excerpt = html.escape(excerpt_from_note(note_path))
+            excerpt = html.escape(polished_excerpt(note_path))
+            published = entry.created[:10]
+            published_label = dt.date.fromisoformat(published).strftime("%-d %B %Y") if language == "en" else published
+            read_label = "Read note →" if language == "en" else "阅读笔记 →"
             lines.extend(
                 [
                     '            <div class="notes-preview">',
-                    f'              <h3><a class="notes-preview-title" href="{href}">{html.escape(entry.title)}</a></h3>',
+                    f'              <div class="notes-entry-heading"><h3><a class="notes-preview-title" href="{href}">{html.escape(title)}</a></h3><time class="notes-date" datetime="{published}">{published_label}</time></div>',
                     f'              <p class="notes-excerpt">{excerpt}</p>',
+                    f'              <a class="notes-read" href="{href}">{read_label}</a>',
                     "            </div>",
                 ]
             )
         lines.append("          </div>")
         if len(entries) > NOTES_PREVIEW_LIMIT:
             lines.append(
-                f'          <a class="notes-more" href="{category_href}">More …</a>'
+                f'          <a class="notes-more" href="{category_href}">{"More …" if language == "en" else "更多 …"}</a>'
             )
         lines.append("        </article>")
         lines.append("")
@@ -336,21 +415,23 @@ def build_overview_block() -> str:
     return "\n".join(lines)
 
 
-def update_notes_overview() -> Path:
-    if not NOTES_OVERVIEW_PATH.exists():
-        raise RuntimeError(f"笔记总览不存在：{NOTES_OVERVIEW_PATH}")
-    source = NOTES_OVERVIEW_PATH.read_text(encoding="utf-8")
+def update_notes_overview() -> list[Path]:
     marker_pattern = re.compile(
         re.escape(OVERVIEW_START_MARKER)
         + r".*?"
         + re.escape(OVERVIEW_END_MARKER),
         re.DOTALL,
     )
-    if not marker_pattern.search(source):
-        raise RuntimeError("笔记总览未找到受管预览区块标记。")
-    updated = marker_pattern.sub(build_overview_block(), source, count=1)
-    NOTES_OVERVIEW_PATH.write_text(updated, encoding="utf-8")
-    return NOTES_OVERVIEW_PATH
+    updated_paths: list[Path] = []
+    for path, language in ((NOTES_OVERVIEW_PATH, "en"), (NOTES_OVERVIEW_ZH_PATH, "zh-CN")):
+        if not path.exists():
+            raise RuntimeError(f"笔记总览不存在：{path}")
+        source = path.read_text(encoding="utf-8")
+        if not marker_pattern.search(source):
+            raise RuntimeError(f"笔记总览未找到受管预览区块标记：{path}")
+        path.write_text(marker_pattern.sub(build_overview_block(language), source, count=1), encoding="utf-8")
+        updated_paths.append(path)
+    return updated_paths
 
 
 def note_page_metadata(path: Path) -> tuple[str, str, str]:
@@ -604,9 +685,13 @@ def update_index(category: str, slug: str, title: str, created_iso: str) -> Path
         key=lambda item: (item.created, item.title),
         reverse=True,
     )
-    new_block = build_managed_block(sorted_entries)
+    new_block = build_archive_block(sorted_entries, category, "en")
     updated = replace_managed_block(working, new_block)
     index_path.write_text(updated, encoding="utf-8")
+    zh_index_path = config["zh_index_path"]
+    zh_source = zh_index_path.read_text(encoding="utf-8")
+    zh_updated = replace_managed_block(zh_source, build_archive_block(sorted_entries, category, "zh-CN"))
+    zh_index_path.write_text(zh_updated, encoding="utf-8")
     return index_path
 
 
@@ -636,7 +721,7 @@ def main() -> int:
             f"<span>{html.escape(args.title)}</span>"
         )
         translation_breadcrumb = (
-            f'<a href="{config["index_href"]}">{html.escape(config["label"])}</a> · '
+            f'<a href="index.zh.html">{html.escape(config["label"])}</a> · '
             f"<span>{html.escape(args.translation_title)}</span>"
         )
         now = dt.datetime.now().astimezone()
@@ -669,14 +754,14 @@ def main() -> int:
         output_path = write_note_page(args.category, f"{args.slug}.html", original_html)
         translated_path = write_note_page(args.category, translated_filename, translated_html)
         index_path = update_index(args.category, args.slug, args.title, created_iso)
-        overview_path = update_notes_overview()
+        overview_paths = update_notes_overview()
         catalog_path = update_note_catalog()
 
         print(f"[OK] Generated note: {output_path}")
         print(f"[OK] Generated translation: {translated_path}")
         print(f"[OK] Updated index: {index_path}")
         print(f"[OK] Updated note navigation: {catalog_path}")
-        print(f"[OK] Updated overview: {overview_path}")
+        print(f"[OK] Updated overviews: {', '.join(map(str, overview_paths))}")
         return 0
     except Exception as exc:  # noqa: BLE001
         print(f"[ERROR] {exc}", file=sys.stderr)
