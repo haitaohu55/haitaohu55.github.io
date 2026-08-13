@@ -68,7 +68,6 @@ HOME_NOTE_PREVIEWS = {
     ],
     "other": [("notes/other/git.en.html", "git")],
 }
-HOME_MORE_CATEGORIES = {"tb"}
 NOTES_PREVIEW_LIMIT = 3
 NOTES_CATEGORIES = {
     "dft": Path("notes/dft/index.html"),
@@ -461,8 +460,8 @@ def main() -> int:
         failures.append("首页 Notes 缺少紧凑分类预览结构")
     if home_source.count('class="home-notes-entry"') != len(expected_home_previews):
         failures.append("首页 Notes 应为每类最多三篇的紧凑预览")
-    if home_source.count('class="home-notes-more"') != len(HOME_MORE_CATEGORIES):
-        failures.append("首页 Notes 只应在仍有更多笔记的分类显示省略号")
+    if home_source.count('class="home-notes-more"') != len(NOTES_CATEGORIES):
+        failures.append("首页 Notes 每个分类都应固定显示省略号入口")
     for category in NOTES_CATEGORIES:
         marker = f'data-home-notes-category="{category}"'
         if home_source.count(marker) != 1:
