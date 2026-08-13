@@ -88,6 +88,16 @@ APS_PUBLICATION_URLS = [
     "https://journals.aps.org/prb/abstract/10.1103/2rfb-j778",
     "https://journals.aps.org/prb/abstract/10.1103/pk8h-xlld",
 ]
+PUBLICATION_AUTHORS = [
+    "Hai-Tao Hu, Xiaoshui Lin, Ai-Min Guo, Guangcan Guo, Zijing Lin, and Ming Gong",
+    "Hai-Tao Hu, Yang Chen, Xiaoshui Lin, Ai-Min Guo, Zijing Lin, and Ming Gong",
+    "Hai-Tao Hu, Ming Gong, Guangcan Guo, and Zijing Lin",
+]
+PUBLICATION_METADATA = [
+    ("Physical Review Letters", "134", "246301", "18 June 2025"),
+    ("Physical Review B", "112", "054201", "4 August 2025"),
+    ("Physical Review B", "112", "245134", "15 December 2025"),
+]
 DOI_LINK_URLS = [
     "https://doi.org/10.1103/rl1f-ptzq",
     "https://doi.org/10.1103/2rfb-j778",
@@ -409,6 +419,17 @@ def main() -> int:
         failures.append("首页 About me 不应保留 Current projects")
     if "Condensed Matter Physics · USTC" not in home_text:
         failures.append("顶栏缺少研究方向与学校标识")
+    if "et al." in home_text:
+        failures.append("首页 Publications 不应继续使用 et al. 省略作者")
+    for authors in PUBLICATION_AUTHORS:
+        if authors not in home_text:
+            failures.append(f"首页 Publications 缺少完整作者：{authors}")
+    for journal, volume, article, date in PUBLICATION_METADATA:
+        metadata_pattern = re.compile(
+            rf"{re.escape(journal)}\s+{volume}\s*,\s*{article}\s+·\s+Published\s+{re.escape(date)}"
+        )
+        if not metadata_pattern.search(home_text):
+            failures.append(f"首页 Publications 元数据不完整：{journal} {volume}, {article}")
 
     notes = parse(ROOT / "notes.html")
     notes_text = " ".join(notes.all_text)

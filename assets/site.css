@@ -368,6 +368,24 @@ li + li {
   line-height: 1.55;
 }
 
+#publications .publication-title {
+  display: inline-block;
+  max-width: 68ch;
+  line-height: 1.45;
+}
+
+#publications .publication-authors {
+  margin: 7px 0 1px;
+  color: var(--color-secondary-ink);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+#publications .publication-meta {
+  margin-top: 0;
+  font-size: 12px;
+}
+
 .notes-directory {
   border-top: 1px solid var(--color-line);
 }
