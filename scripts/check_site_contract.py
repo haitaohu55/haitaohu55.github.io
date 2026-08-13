@@ -65,6 +65,8 @@ NOTE_PAIRS = {
     Path("notes/other/git.html"): (Path("notes/other/git.en.html"), "zh-CN", "en", "2026-03-05"),
 }
 NOTE_SCRIPT_SRC = "../../assets/note-page.js"
+NOTE_SAFE_HOME_HREF = "../../index.html"
+NOTE_SAFE_CATEGORY_HREF = "index.html"
 PUBLICATIONS_INTRO = "Selected work in quasiperiodic systems and localization, with brief abstracts."
 GOOGLE_SCHOLAR_URL = "https://scholar.google.com.hk/citations?hl=zh-CN&user=51eUsJkAAAAJ"
 APS_PUBLICATION_URLS = [
@@ -484,6 +486,12 @@ def main() -> int:
                 failures.append(f"笔记发布日期不固定：{relative} -> {page.time_values}")
             if len(page.ids) != len(set(page.ids)):
                 failures.append(f"笔记存在重复 id：{relative}")
+            if NOTE_SAFE_HOME_HREF not in page.hrefs:
+                failures.append(f"笔记顶部 Home 未使用安全相对路径：{relative}")
+            if NOTE_SAFE_CATEGORY_HREF not in page.hrefs:
+                failures.append(f"笔记顶部分类链接未使用安全相对路径：{relative}")
+            if any(href.startswith("/") for href in page.hrefs):
+                failures.append(f"笔记仍包含环境相关的根路径链接：{relative}")
 
         if original.h2_ids != translated.h2_ids:
             failures.append(f"双语笔记章节锚点不一致：{original_relative}")
@@ -517,6 +525,29 @@ def main() -> int:
         failures.append("精确对角化的大矩阵仍使用导致左侧裁切的负偏移")
     if r"\begin{array}{c|cccccccccc}" not in matrix_source:
         failures.append("精确对角化的 10×10 矩阵列数声明不正确")
+
+    note_script_source = (ROOT / "assets/note-page.js").read_text(encoding="utf-8")
+    for marker in (
+        "// NOTE-CATALOG:START",
+        "// NOTE-CATALOG:END",
+        'menuButton.textContent = "Language"',
+        'pagination.className = "note-pagination"',
+        'allNotes.href = "../../notes.html"',
+        'home.href = "../../index.html"',
+    ):
+        if marker not in note_script_source:
+            failures.append(f"笔记交互脚本缺少导航规则：{marker}")
+
+    quasiperiodic_two_source = (ROOT / "notes/tb/准周期2.html").read_text(
+        encoding="utf-8"
+    )
+    breadcrumb_match = re.search(
+        r'<div class="breadcrumbs">(.*?)</div>',
+        quasiperiodic_two_source,
+        re.DOTALL,
+    )
+    if not breadcrumb_match or "Quasiperiodic Systems II" not in breadcrumb_match.group(1):
+        failures.append("准周期二顶部面包屑应统一显示英文标题")
 
     publications_page = ROOT / "publications.html"
     publications = parse(publications_page)
@@ -562,7 +593,9 @@ def main() -> int:
 
         links_to_check = parsed.hrefs + parsed.stylesheets
         if page == ROOT / "templates" / "note_page.html":
-            links_to_check = parsed.hrefs
+            links_to_check = [
+                href for href in parsed.hrefs if href != NOTE_SAFE_HOME_HREF
+            ]
         for href in links_to_check:
             target = local_target(page, href)
             if target is not None and not target.resolve().is_file():
@@ -599,6 +632,10 @@ def main() -> int:
             ".note-layout",
             "position: sticky",
             ".language-switch",
+            ".language-menu",
+            ".language-options",
+            ".note-pagination",
+            ".note-neighbor",
             ".math-viewport",
         ):
             if marker not in source:

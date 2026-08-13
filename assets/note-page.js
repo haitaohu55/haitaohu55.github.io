@@ -10,6 +10,70 @@
   const content = document.querySelector(".note-content") || article;
   const languageSwitch = document.querySelector(".language-switch");
   const alternate = root.dataset.noteAlternate;
+  // NOTE-CATALOG:START
+  const noteCatalog = {
+    "dft": [
+      {
+        "zh": "phonon-spectrum.html",
+        "en": "phonon-spectrum.en.html",
+        "zhTitle": "声子谱的计算",
+        "enTitle": "Phonon Spectrum Calculation"
+      },
+      {
+        "zh": "linux.html",
+        "en": "linux.en.html",
+        "zhTitle": "Some common Linux commands",
+        "enTitle": "Some common Linux commands"
+      },
+      {
+        "zh": "opt.zh.html",
+        "en": "opt.html",
+        "zhTitle": "使用 VASP 进行结构优化",
+        "enTitle": "Structure Optimization using VASP"
+      }
+    ],
+    "tb": [
+      {
+        "zh": "准周期2.html",
+        "en": "准周期2.en.html",
+        "zhTitle": "准周期2",
+        "enTitle": "Quasiperiodic Systems II"
+      },
+      {
+        "zh": "准周期1.html",
+        "en": "准周期1.en.html",
+        "zhTitle": "准周期1",
+        "enTitle": "Quasiperiodic Systems I"
+      },
+      {
+        "zh": "二次量子化.html",
+        "en": "二次量子化.en.html",
+        "zhTitle": "二次量子化",
+        "enTitle": "Second Quantization"
+      },
+      {
+        "zh": "IsingMC.html",
+        "en": "IsingMC.en.html",
+        "zhTitle": "Ising 模型的 Monte Carlo 模拟",
+        "enTitle": "Monte Carlo Simulation of the Ising Model"
+      },
+      {
+        "zh": "精确对角化.html",
+        "en": "精确对角化.en.html",
+        "zhTitle": "精确对角化",
+        "enTitle": "Exact Diagonalization"
+      }
+    ],
+    "other": [
+      {
+        "zh": "git.html",
+        "en": "git.en.html",
+        "zhTitle": "git",
+        "enTitle": "git"
+      }
+    ]
+  };
+  // NOTE-CATALOG:END
 
   const year = document.getElementById("year");
   if (year) {
@@ -24,6 +88,58 @@
     };
     updateAlternateHref();
     window.addEventListener("hashchange", updateAlternateHref);
+
+    const title = article ? article.querySelector("h1") : null;
+    if (title && !article.querySelector(".language-menu")) {
+      let heading = title.closest(".note-heading");
+      if (!heading) {
+        heading = document.createElement("div");
+        heading.className = "note-heading";
+        title.before(heading);
+        heading.appendChild(title);
+      }
+
+      const menu = document.createElement("details");
+      menu.className = "language-menu";
+      const menuButton = document.createElement("summary");
+      menuButton.textContent = "Language";
+      menuButton.setAttribute("aria-label", "Choose language");
+      const options = document.createElement("div");
+      options.className = "language-options";
+
+      const makeCurrentOption = (label, lang) => {
+        const current = document.createElement("span");
+        current.lang = lang;
+        current.textContent = label;
+        current.setAttribute("aria-current", "page");
+        return current;
+      };
+      languageSwitch.className = "language-option";
+      languageSwitch.textContent = isChinese ? "English" : "中文";
+
+      if (isChinese) {
+        options.append(makeCurrentOption("中文", "zh-CN"), languageSwitch);
+      } else {
+        options.append(languageSwitch, makeCurrentOption("English", "en"));
+      }
+      menu.append(menuButton, options);
+      heading.appendChild(menu);
+
+      document.addEventListener("click", (event) => {
+        if (menu.open && !menu.contains(event.target)) {
+          menu.removeAttribute("open");
+        }
+      });
+      menu.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && menu.open) {
+          menu.removeAttribute("open");
+          menuButton.focus();
+        }
+      });
+    }
+    if (article && article.querySelector(".language-menu")) {
+      languageSwitch.textContent = isChinese ? "English" : "中文";
+    }
   }
 
   const headings = content ? Array.from(content.querySelectorAll("h2")) : [];
@@ -76,6 +192,66 @@
         toggle.focus();
       }
     });
+  }
+
+  const currentFilename = decodeURIComponent(
+    window.location.pathname.split("/").pop() || ""
+  );
+  const catalogMatch = Object.entries(noteCatalog).find(([, entries]) =>
+    entries.some((entry) => entry.zh === currentFilename || entry.en === currentFilename)
+  );
+  if (article && catalogMatch) {
+    const [, entries] = catalogMatch;
+    const currentIndex = entries.findIndex(
+      (entry) => entry.zh === currentFilename || entry.en === currentFilename
+    );
+    const languageKey = isChinese ? "zh" : "en";
+    const titleKey = isChinese ? "zhTitle" : "enTitle";
+    const labels = isChinese
+      ? { previous: "上一篇", next: "下一篇", all: "全部笔记", home: "主页" }
+      : { previous: "Previous", next: "Next", all: "All notes", home: "Home" };
+    const pagination = document.createElement("nav");
+    pagination.className = "note-pagination";
+    pagination.setAttribute("aria-label", isChinese ? "笔记导航" : "Note navigation");
+
+    const makeNeighbor = (entry, direction) => {
+      if (!entry) {
+        const placeholder = document.createElement("span");
+        placeholder.className = `note-neighbor note-neighbor--${direction} is-empty`;
+        placeholder.setAttribute("aria-hidden", "true");
+        return placeholder;
+      }
+      const link = document.createElement("a");
+      link.className = `note-neighbor note-neighbor--${direction}`;
+      link.href = entry[languageKey];
+      const relation = document.createElement("span");
+      relation.className = "note-neighbor__relation";
+      relation.textContent = direction === "previous"
+        ? `← ${labels.previous}`
+        : `${labels.next} →`;
+      const linkedTitle = document.createElement("span");
+      linkedTitle.className = "note-neighbor__title";
+      linkedTitle.textContent = entry[titleKey];
+      link.append(relation, linkedTitle);
+      return link;
+    };
+
+    const exits = document.createElement("div");
+    exits.className = "note-pagination__exits";
+    const allNotes = document.createElement("a");
+    allNotes.href = "../../notes.html";
+    allNotes.textContent = labels.all;
+    const home = document.createElement("a");
+    home.href = "../../index.html";
+    home.textContent = labels.home;
+    exits.append(allNotes, home);
+
+    pagination.append(
+      makeNeighbor(entries[currentIndex - 1], "previous"),
+      exits,
+      makeNeighbor(entries[currentIndex + 1], "next")
+    );
+    article.appendChild(pagination);
   }
 
   const markOverflowingMath = () => {

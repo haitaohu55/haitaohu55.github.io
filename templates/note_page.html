@@ -160,7 +160,7 @@
     <div class="nav-container">
       <div class="site-title">Haitao Hu</div>
       <div class="breadcrumbs">
-        <a href="/index.html">Home</a> ·
+        <a href="../../index.html">Home</a> ·
         {{breadcrumb}}
       </div>
     </div>
@@ -168,10 +168,17 @@
 
   <main class="note-layout">
     <article class="note-card">
-      <h1>{{title}}</h1>
+      <div class="note-heading">
+        <h1>{{title}}</h1>
+        <details class="language-menu">
+          <summary aria-label="Choose language">Language</summary>
+          <div class="language-options">
+            {{language_options}}
+          </div>
+        </details>
+      </div>
       <div class="note-meta">
         <span>{{published_label}} <time id="published-date" datetime="{{published_date}}">{{published_date}}</time></span>
-        <a class="language-switch" href="{{alternate_filename}}" hreflang="{{alternate_lang}}">{{alternate_label}}</a>
       </div>
 
       <div class="note-content">
