@@ -9,6 +9,7 @@ import shutil
 import subprocess
 import sys
 from dataclasses import dataclass
+from html.parser import HTMLParser
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -54,6 +55,46 @@ class NoteEntry:
     slug: str
     title: str
     created: str
+
+
+class ExcerptParser(HTMLParser):
+    def __init__(self) -> None:
+        super().__init__()
+        self.main_depth = 0
+        self.skip_depth = 0
+        self.current_tag: str | None = None
+        self.buffer: list[str] = []
+        self.paragraphs: list[str] = []
+        self.headings: list[str] = []
+        self.heading_count_at_first_paragraph: int | None = None
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        if tag == "main":
+            self.main_depth += 1
+        if tag in {"script", "style"}:
+            self.skip_depth += 1
+        if self.main_depth and not self.skip_depth and tag in {"p", "h2"}:
+            self.current_tag = tag
+            self.buffer = []
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag == self.current_tag:
+            value = " ".join(" ".join(self.buffer).split())
+            if value:
+                target = self.paragraphs if tag == "p" else self.headings
+                target.append(value)
+                if tag == "p" and self.heading_count_at_first_paragraph is None:
+                    self.heading_count_at_first_paragraph = len(self.headings)
+            self.current_tag = None
+            self.buffer = []
+        if tag in {"script", "style"} and self.skip_depth:
+            self.skip_depth -= 1
+        if tag == "main" and self.main_depth:
+            self.main_depth -= 1
+
+    def handle_data(self, data: str) -> None:
+        if self.current_tag and not self.skip_depth:
+            self.buffer.append(data)
 
 
 def parse_args() -> argparse.Namespace:
@@ -198,6 +239,48 @@ def read_category_entries(category: str) -> list[NoteEntry]:
     return list(entries.values())
 
 
+def excerpt_from_note(path: Path) -> str:
+    parser = ExcerptParser()
+    parser.feed(path.read_text(encoding="utf-8", errors="ignore"))
+    parser.close()
+
+    if (parser.heading_count_at_first_paragraph or 0) >= 3:
+        return " · ".join(parser.headings[:3])
+
+    def plain_inline_math(match: re.Match[str]) -> str:
+        value = match.group(1)
+        value = re.sub(
+            r"\\(?:texttt|mathbf|mathrm|text)\{([^{}]+)\}",
+            r"\1",
+            value,
+        )
+        value = re.sub(r"\\sqrt\{([^{}]+)\}", r"√(\1)", value)
+        value = value.replace(r"\approx", "≈").replace(r"\lt", "<")
+        value = re.sub(r"\\ln\b", "ln", value)
+        value = re.sub(r"\\[A-Za-z]+", "", value)
+        return re.sub(r"[{}]", "", value)
+
+    for paragraph in parser.paragraphs:
+        if len(paragraph) < 24:
+            continue
+        if "http://" in paragraph or "https://" in paragraph:
+            continue
+        before_display_math = re.split(r"\\begin\{", paragraph, maxsplit=1)[0].strip()
+        if len(before_display_math) >= 16:
+            paragraph = before_display_math
+        paragraph = re.sub(r"\$([^$]+)\$", plain_inline_math, paragraph)
+        paragraph = re.sub(r"\\[A-Za-z]+", "", paragraph)
+        paragraph = re.sub(r"[{}]", "", paragraph)
+        paragraph = " ".join(paragraph.split())
+        paragraph = re.sub(r"\s+([，。,.])", r"\1", paragraph)
+        paragraph = re.sub(r",?\s*e\.g\.\.?$", ".", paragraph)
+        if len(paragraph) >= 16:
+            return paragraph
+    if parser.headings:
+        return " · ".join(parser.headings[:3])
+    raise RuntimeError(f"无法从笔记正文提取摘要：{path}")
+
+
 def build_overview_block() -> str:
     lines = [OVERVIEW_START_MARKER, '      <div class="notes-directory">']
     for category, config in CATEGORY_CONFIG.items():
@@ -213,14 +296,16 @@ def build_overview_block() -> str:
             ]
         )
         for entry in entries[:NOTES_PREVIEW_LIMIT]:
-            href = html.escape(
-                (config["index_path"].parent / f"{entry.slug}.html")
-                .relative_to(ROOT)
-                .as_posix(),
-                quote=True,
-            )
-            lines.append(
-                f'            <h3><a class="notes-preview-title" href="{href}">{html.escape(entry.title)}</a></h3>'
+            note_path = config["index_path"].parent / f"{entry.slug}.html"
+            href = html.escape(note_path.relative_to(ROOT).as_posix(), quote=True)
+            excerpt = html.escape(excerpt_from_note(note_path))
+            lines.extend(
+                [
+                    '            <div class="notes-preview">',
+                    f'              <h3><a class="notes-preview-title" href="{href}">{html.escape(entry.title)}</a></h3>',
+                    f'              <p class="notes-excerpt">{excerpt}</p>',
+                    "            </div>",
+                ]
             )
         lines.append("          </div>")
         if len(entries) > NOTES_PREVIEW_LIMIT:

@@ -28,6 +28,7 @@ NOTE_TYPOGRAPHY_MARKERS = [
     ".notes-directory",
     ".notes-category h2",
     ".notes-preview-list h3",
+    ".notes-excerpt",
     ".notes-more",
     ".toc a",
     ".note-card h3",
@@ -148,6 +149,8 @@ class PageParser(HTMLParser):
         self.heading_level = 0
         self.notes_category: str | None = None
         self.notes_preview_links: dict[str, list[tuple[str, int]]] = {}
+        self.notes_preview_depth = 0
+        self.notes_excerpt_count: dict[str, int] = {}
         self.notes_more_hrefs: dict[str, list[str]] = {}
         self.images: list[dict[str, str]] = []
         self.all_text: list[str] = []
@@ -165,6 +168,16 @@ class PageParser(HTMLParser):
             self.notes_category = attributes.get("data-category") or ""
             self.notes_preview_links.setdefault(self.notes_category, [])
             self.notes_more_hrefs.setdefault(self.notes_category, [])
+            self.notes_excerpt_count.setdefault(self.notes_category, 0)
+        if "notes-preview" in classes:
+            self.notes_preview_depth += 1
+        if (
+            tag == "p"
+            and self.notes_category
+            and self.notes_preview_depth
+            and "notes-excerpt" in classes
+        ):
+            self.notes_excerpt_count[self.notes_category] += 1
         if tag == "a" and attributes.get("href"):
             href = attributes["href"] or ""
             self.hrefs.append(href)
@@ -203,6 +216,8 @@ class PageParser(HTMLParser):
             self.heading_level = 0
         if tag == "article" and self.notes_category is not None:
             self.notes_category = None
+        if tag == "div" and self.notes_preview_depth:
+            self.notes_preview_depth -= 1
 
     def handle_data(self, data: str) -> None:
         value = " ".join(data.split())
@@ -310,6 +325,11 @@ def main() -> int:
             )
         if any(level != 3 for _, level in actual_preview):
             failures.append(f"Notes 页 {category} 的具体笔记标题必须使用三级标题")
+        excerpt_count = notes.notes_excerpt_count.get(category, 0)
+        if excerpt_count != len(actual_preview):
+            failures.append(
+                f"Notes 页 {category} 的每个预览都应有摘要：标题 {len(actual_preview)}，摘要 {excerpt_count}"
+            )
         expected_more = (
             [category_index.as_posix()]
             if len(category_hrefs) > NOTES_PREVIEW_LIMIT

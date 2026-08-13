@@ -371,19 +371,35 @@ li + li {
 
 .notes-preview-list {
   display: grid;
-  gap: 10px;
+  gap: 18px;
+}
+
+.notes-preview {
+  min-width: 0;
 }
 
 .notes-preview-list h3 {
-  margin: 0;
+  margin: 0 0 5px;
   font-size: 15px;
   font-weight: 560;
   line-height: 1.45;
 }
 
+.notes-excerpt {
+  display: -webkit-box;
+  max-width: 72ch;
+  margin: 0;
+  overflow: hidden;
+  color: var(--color-muted);
+  font-size: 13px;
+  line-height: 1.6;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
 .notes-more {
   display: inline-block;
-  margin-top: 13px;
+  margin-top: 17px;
   color: var(--color-muted);
   font-size: 13px;
   font-weight: 600;
