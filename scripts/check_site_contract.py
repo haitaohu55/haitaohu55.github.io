@@ -3,12 +3,19 @@
 
 from __future__ import annotations
 
+import ast
 import datetime as dt
+import html
 import re
 from collections import Counter
 from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
+
+try:
+    from .sync_tex_note import NoteEntry, latest_note_entries
+except ImportError:
+    from sync_tex_note import NoteEntry, latest_note_entries
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -56,19 +63,8 @@ SHORT_NOTE_DESCRIPTIONS = [
     "Short notes on tight-binding calculations.",
     "Other short notes.",
 ]
-HOME_NOTE_PREVIEWS = {
-    "dft": [
-        ("notes/dft/phonon-spectrum.en.html", "Phonon Spectrum Calculation"),
-        ("notes/dft/linux.en.html", "Some common Linux commands"),
-        ("notes/dft/opt.html", "Structure Optimization using VASP"),
-    ],
-    "tb": [
-        ("notes/tb/准周期2.en.html", "Quasiperiodic Systems II"),
-        ("notes/tb/准周期1.en.html", "Quasiperiodic Systems I"),
-        ("notes/tb/二次量子化.en.html", "Second Quantization"),
-    ],
-    "other": [("notes/other/git.en.html", "git")],
-}
+HOME_NOTES_START_MARKER = "<!-- HOME-NOTES:START -->"
+HOME_NOTES_END_MARKER = "<!-- HOME-NOTES:END -->"
 NOTES_PREVIEW_LIMIT = 3
 NOTES_CATEGORIES = {
     "dft": Path("notes/dft/index.html"),
@@ -212,6 +208,10 @@ class PageParser(HTMLParser):
         self.notes_preview_stack: list[str] = []
         self.notes_excerpt_count: dict[str, int] = {}
         self.notes_more_hrefs: dict[str, list[str]] = {}
+        self.home_notes_category: str | None = None
+        self.home_notes_entry_hrefs: dict[str, list[str]] = {}
+        self.home_notes_entry_titles: dict[str, list[str]] = {}
+        self.home_notes_entry_text: list[str] | None = None
         self.images: list[dict[str, str]] = []
         self.all_text: list[str] = []
         self.html_lang = ""
@@ -259,6 +259,12 @@ class PageParser(HTMLParser):
             self.notes_preview_links.setdefault(self.notes_category, [])
             self.notes_more_hrefs.setdefault(self.notes_category, [])
             self.notes_excerpt_count.setdefault(self.notes_category, 0)
+        if tag == "article" and "home-notes-category" in classes:
+            self.home_notes_category = (
+                attributes.get("data-home-notes-category") or ""
+            )
+            self.home_notes_entry_hrefs.setdefault(self.home_notes_category, [])
+            self.home_notes_entry_titles.setdefault(self.home_notes_category, [])
         if self.notes_preview_depth and tag == "div":
             self.notes_preview_stack.append("div")
         if tag == "div" and "notes-preview" in classes:
@@ -284,6 +290,9 @@ class PageParser(HTMLParser):
                 )
             if self.notes_category and "notes-more" in classes:
                 self.notes_more_hrefs[self.notes_category].append(href)
+            if self.home_notes_category and "home-notes-entry" in classes:
+                self.home_notes_entry_hrefs[self.home_notes_category].append(href)
+                self.home_notes_entry_text = []
         if tag == "link" and attributes.get("rel") == "stylesheet":
             href = attributes.get("href")
             if href:
@@ -319,6 +328,13 @@ class PageParser(HTMLParser):
             self.heading_level = 0
         if tag == "article" and self.notes_category is not None:
             self.notes_category = None
+        if tag == "article" and self.home_notes_category is not None:
+            self.home_notes_category = None
+        if tag == "a" and self.home_notes_entry_text is not None:
+            if self.home_notes_category:
+                title = " ".join(" ".join(self.home_notes_entry_text).split())
+                self.home_notes_entry_titles[self.home_notes_category].append(title)
+            self.home_notes_entry_text = None
         if tag == "div" and self.notes_preview_stack:
             marker = self.notes_preview_stack.pop()
             if marker == "preview":
@@ -329,6 +345,8 @@ class PageParser(HTMLParser):
             self.time_buffer.append(data)
         if self.pre_depth:
             self.pre_buffer.append(data)
+        if self.home_notes_entry_text is not None:
+            self.home_notes_entry_text.append(data)
         value = " ".join(data.split())
         if value:
             self.all_text.append(value)
@@ -356,17 +374,41 @@ def local_target(page: Path, href: str) -> Path | None:
     return page.parent / raw_path
 
 
-def managed_note_hrefs(path: Path) -> list[str]:
+def managed_note_entries(path: Path) -> list[tuple[str, str]]:
     source = path.read_text(encoding="utf-8")
     start = "<!-- AUTO-NOTES:START -->"
     end = "<!-- AUTO-NOTES:END -->"
     if start not in source or end not in source:
         return []
     managed = source.split(start, 1)[1].split(end, 1)[0]
-    parser = PageParser()
-    parser.feed(managed)
-    parser.close()
-    return list(dict.fromkeys(parser.hrefs))
+    entries: list[tuple[str, str]] = []
+    for item in re.finditer(
+        r"<li\b(?P<attributes>[^>]*)>(?P<body>.*?)</li>",
+        managed,
+        flags=re.IGNORECASE | re.DOTALL,
+    ):
+        created = re.search(
+            r'\bdata-created="([^"]+)"',
+            item.group("attributes"),
+            flags=re.IGNORECASE,
+        )
+        href = re.search(
+            r'<a\b[^>]*\bhref="([^"]+)"',
+            item.group("body"),
+            flags=re.IGNORECASE,
+        )
+        if created and href:
+            entries.append((created.group(1), html.unescape(href.group(1))))
+    return entries
+
+
+def managed_note_hrefs(path: Path) -> list[str]:
+    entries = sorted(
+        managed_note_entries(path),
+        key=lambda entry: dt.datetime.fromisoformat(entry[0]),
+        reverse=True,
+    )
+    return [href for _, href in entries]
 
 
 def math_blocks(source: str) -> list[str]:
@@ -416,8 +458,52 @@ def notes_summary(path: Path) -> str:
     return " ".join(re.sub(r"<[^>]+>", "", match.group(1)).split())
 
 
-def main() -> int:
+def page_h1(path: Path) -> str:
+    source = path.read_text(encoding="utf-8")
+    match = re.search(r"<h1\b[^>]*>(.*?)</h1>", source, flags=re.IGNORECASE | re.DOTALL)
+    if not match:
+        return ""
+    return " ".join(html.unescape(re.sub(r"<[^>]+>", "", match.group(1))).split())
+
+
+def latest_note_entry_regressions() -> list[str]:
     failures: list[str] = []
+    entries = [
+        NoteEntry("a", "A", "2026-08-01T00:00:00+08:00"),
+        NoteEntry("b", "B", "2026-08-04T00:00:00+08:00"),
+        NoteEntry("c", "C", "2026-08-02T00:00:00+08:00"),
+        NoteEntry("d", "D", "2026-08-03T00:00:00+08:00"),
+    ]
+    expected_by_count = {
+        0: [],
+        1: ["a"],
+        2: ["b", "a"],
+        3: ["b", "c", "a"],
+        4: ["b", "d", "c"],
+    }
+    for count, expected in expected_by_count.items():
+        actual = [entry.slug for entry in latest_note_entries(entries[:count])]
+        if actual != expected:
+            failures.append(
+                f"首页最新笔记 {count} 条边界不符：应为 {expected}，实际为 {actual}"
+            )
+
+    mixed_offsets = [
+        NoteEntry("local", "Local", "2026-01-01T00:30:00+08:00"),
+        NoteEntry("utc", "UTC", "2025-12-31T17:00:00+00:00"),
+    ]
+    actual_offsets = [
+        entry.slug for entry in latest_note_entries(mixed_offsets, limit=2)
+    ]
+    if actual_offsets != ["utc", "local"]:
+        failures.append(
+            f"首页最新笔记混合时区排序不符：实际为 {actual_offsets}"
+        )
+    return failures
+
+
+def main() -> int:
+    failures = latest_note_entry_regressions()
 
     for relative in sorted(REQUIRED_ROOT_PAGES):
         if not (ROOT / relative).is_file():
@@ -526,15 +612,46 @@ def main() -> int:
     for description in SHORT_NOTE_DESCRIPTIONS:
         if description in home_text or description in notes_text:
             failures.append(f"Notes 目录不应保留重复说明：{description}")
-    expected_home_previews = [
-        item for previews in HOME_NOTE_PREVIEWS.values() for item in previews
-    ]
-    for href, title in expected_home_previews:
-        if href not in home.hrefs or title not in home_text:
-            failures.append(f"首页 Notes 缺少预览笔记：{title} -> {href}")
     if "home-notes-directory" not in home_source:
         failures.append("首页 Notes 缺少紧凑分类预览结构")
-    if home_source.count('class="home-notes-entry"') != len(expected_home_previews):
+    for marker in (HOME_NOTES_START_MARKER, HOME_NOTES_END_MARKER):
+        if home_source.count(marker) != 1:
+            failures.append(f"首页 Notes 缺少唯一受管区块标记：{marker}")
+    expected_home_preview_count = 0
+    for category, category_index in NOTES_CATEGORIES.items():
+        category_entries = managed_note_entries(ROOT / category_index)
+        sorted_entries = sorted(
+            category_entries,
+            key=lambda entry: dt.datetime.fromisoformat(entry[0]),
+            reverse=True,
+        )
+        if category_entries != sorted_entries:
+            failures.append(f"Notes 分类索引未按发布日期倒序排列：{category}")
+        category_hrefs = managed_note_hrefs(ROOT / category_index)
+        expected_preview = [
+            (category_index.parent / href).as_posix()
+            for href in category_hrefs[:NOTES_PREVIEW_LIMIT]
+        ]
+        actual_preview = home.home_notes_entry_hrefs.get(category, [])
+        expected_titles = [
+            page_h1(ROOT / href) if (ROOT / href).is_file() else ""
+            for href in expected_preview
+        ]
+        actual_titles = home.home_notes_entry_titles.get(category, [])
+        expected_home_preview_count += len(expected_preview)
+        if actual_preview != expected_preview:
+            failures.append(
+                f"首页 Notes {category} 应自动展示 {expected_preview}，实际为 {actual_preview}"
+            )
+        if actual_titles != expected_titles:
+            failures.append(
+                f"首页 Notes {category} 标题应为 {expected_titles}，实际为 {actual_titles}"
+            )
+    if set(home.home_notes_entry_hrefs) != set(NOTES_CATEGORIES):
+        failures.append(
+            f"首页 Notes 分类不符：{sorted(home.home_notes_entry_hrefs)}"
+        )
+    if home_source.count('class="home-notes-entry"') != expected_home_preview_count:
         failures.append("首页 Notes 应为每类最多三篇的紧凑预览")
     if home_source.count('class="home-notes-more"') != len(NOTES_CATEGORIES):
         failures.append("首页 Notes 每个分类都应固定显示省略号入口")
@@ -614,13 +731,30 @@ def main() -> int:
         sync_source = sync_script.read_text(encoding="utf-8")
         for marker in (
             "NOTES_PREVIEW_LIMIT = 3",
+            "def update_home_notes()",
             "def update_notes_overview()",
             "overview_paths = update_notes_overview()",
             'build_archive_block(sorted_entries, category, "zh-CN")',
             "def resolve_published_date(",
         ):
             if marker not in sync_source:
-                failures.append(f"笔记同步脚本缺少总览更新规则：{marker}")
+                failures.append(f"笔记同步脚本缺少自动更新规则：{marker}")
+        sync_tree = ast.parse(sync_source)
+        main_function = next(
+            (
+                node
+                for node in sync_tree.body
+                if isinstance(node, ast.FunctionDef) and node.name == "main"
+            ),
+            None,
+        )
+        if main_function is None or not any(
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Name)
+            and node.func.id == "update_home_notes"
+            for node in ast.walk(main_function)
+        ):
+            failures.append("笔记同步脚本 main() 未调用 update_home_notes()")
 
     note_script = ROOT / "assets" / "note-page.js"
     if not note_script.is_file():
