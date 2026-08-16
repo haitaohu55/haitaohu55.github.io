@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="{{page_lang}}" data-note-alternate="{{alternate_filename}}">
+<html lang="en" data-note-alternate="effective-mass.html">
 <head>
   <meta charset="UTF-8" />
-  <title>{{title}} - Haitao Hu</title>
+  <title>Effective Mass Calculation - Haitao Hu</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="Note by Haitao Hu" />
-  <link rel="alternate" hreflang="{{alternate_lang}}" href="{{alternate_filename}}" />
+  <link rel="alternate" hreflang="zh-CN" href="effective-mass.html" />
 
   <!-- MathJax 配置 + 引入 -->
   <script>
@@ -176,12 +176,13 @@
       <div class="site-title">Haitao Hu</div>
       <div class="breadcrumbs">
         <a href="../../index.html">Home</a> ·
-        {{breadcrumb}}
+        <a href="index.html">notes on DFT calculations</a> · <span>Effective Mass Calculation</span>
       </div>
       <details class="language-menu">
         <summary aria-label="Choose language">Language</summary>
         <div class="language-options">
-          {{language_options}}
+          <a class="language-switch" href="effective-mass.html" hreflang="zh-CN">中文</a>
+            <span lang="en" aria-current="page">English</span>
         </div>
       </details>
     </div>
@@ -189,18 +190,61 @@
 
   <main class="note-layout">
     <article class="note-card">
-      <h1>{{title}}</h1>
+      <h1>Effective Mass Calculation</h1>
       <div class="note-meta">
-        <span>{{published_label}} <time id="published-date" datetime="{{published_date}}">{{published_date}}</time></span>
+        <span>Published <time id="published-date" datetime="2026-06-04">2026-06-04</time></span>
       </div>
 
       <div class="note-content">
-{{content_html}}
+<h2 id="定义">Definition</h2>
+<p>Effective mass originates from band curvature. <span class="math display">\[
+\frac{1}{m^*}=\frac{1}{\hbar^2}\frac{\partial^2 E}{\partial k^2}.
+\]</span> The effective mass is a tensor, so electric fields applied along different directions correspond to different effective masses. <span class="math display">\[
+\frac{1}{m^*_{ij}}=\frac{1}{\hbar^2}\frac{\partial^2 E}{\partial k_i \partial k_j}.
+\]</span></p>
+<h2 id="计算流程">Calculation Workflow</h2>
+<p>First, perform an SCF calculation to obtain converged <code>CHGCAR</code> and <code>WAVECAR</code> files, and then use vaspkit-911 to locate the CBM and VBM <span class="math inline">\(k\)</span> points. Second, sample <span class="math inline">\(k\)</span> points near the CBM and VBM and perform an NSCF calculation with the converged <code>CHGCAR</code> to obtain <code>EIGENVAL</code>. Third, use the fitting script to extract the effective-mass tensor from <code>EIGENVAL</code>.</p>
+<h2 id="scf">SCF</h2>
+<p>First, perform the SCF calculation in <code>2_scf/</code> to obtain a converged <code>CHGCAR</code>. The key SCF settings in <code>INCAR</code> are:</p>
+<pre><code>ISTART  = 0
+ICHARG = 2
+LWAVE   = .TRUE.
+LCHARG  = .TRUE.</code></pre>
+<h2 id="nscf">NSCF</h2>
+<p>Next, perform a fixed-charge-density NSCF calculation in <code>4_nscf/</code>, evaluating eigenvalues only at k points near the CBM and VBM. The key NSCF settings in <code>INCAR</code> are:</p>
+<pre><code>ISTART  = 1
+ICHARG = 11
+LWAVE   = .FALSE.
+LCHARG  = .FALSE.
+ISYM   = 0</code></pre>
+<p>The NSCF <code>KPOINTS</code> must lie near the VBM and CBM. They can be generated with the following script:</p>
+<pre><code>python generate_kpoints.py \
+  --poscar POSCAR \
+  --h 0.01 \
+  --cbm 0 0 0 \
+  --vbm 0.4651 0.5 0 \
+  --out KPOINTS_test</code></pre>
+<p>This generates:</p>
+<ul>
+<li><p><code>KPOINTS_test</code>: 54 <span class="math inline">\(k\)</span> points near the VBM and CBM.</p></li>
+<li><p><code>KPOINTS_test.json</code>: a record of how each <span class="math inline">\(k\)</span> point was generated.</p></li>
+</ul>
+<p>Rename <code>KPOINTS_test</code> as <code>KPOINTS</code>.</p>
+<h2 id="拟合有效质量">Fitting the Effective Mass</h2>
+<p>Fit the effective mass using the <code>EIGENVAL</code> and <code>json</code> files obtained in the previous step:</p>
+<pre><code>python fit_effective_mass.py \
+  --eigenval EIGENVAL \
+  --metadata KPOINTS_test.json \
+  --cband 57 \
+  --vband 56 \
+  --poscar POSCAR \
+  --field-direct 1 0 0</code></pre>
+<p>Here, the band indices of the CBM and VBM must be specified. The final <code>--field-direct</code> option selects the direction along which the reduced effective mass is calculated, using the real-space lattice vectors as the basis. The effective mass is then displayed directly in the terminal.</p>
       </div>
     </article>
 
-    <aside class="toc" id="note-toc" aria-label="{{contents_label}}">
-      <div class="toc-title">{{contents_label}}</div>
+    <aside class="toc" id="note-toc" aria-label="Contents">
+      <div class="toc-title">Contents</div>
       <ul id="toc-list"></ul>
     </aside>
   </main>

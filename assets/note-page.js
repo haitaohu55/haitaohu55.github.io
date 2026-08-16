@@ -14,6 +14,18 @@
   const noteCatalog = {
     "dft": [
       {
+        "zh": "electron-phonon-coupling.html",
+        "en": "electron-phonon-coupling.en.html",
+        "zhTitle": "电声耦合计算",
+        "enTitle": "Electron–Phonon Coupling Calculation"
+      },
+      {
+        "zh": "effective-mass.html",
+        "en": "effective-mass.en.html",
+        "zhTitle": "有效质量计算",
+        "enTitle": "Effective Mass Calculation"
+      },
+      {
         "zh": "phonon-spectrum.html",
         "en": "phonon-spectrum.en.html",
         "zhTitle": "声子谱的计算",
@@ -30,9 +42,27 @@
         "en": "opt.html",
         "zhTitle": "使用 VASP 进行结构优化",
         "enTitle": "Structure Optimization using VASP"
+      },
+      {
+        "zh": "band-structure.html",
+        "en": "band-structure.en.html",
+        "zhTitle": "能带计算",
+        "enTitle": "Band Structure Calculation"
       }
     ],
     "tb": [
+      {
+        "zh": "交错磁1.html",
+        "en": "交错磁1.en.html",
+        "zhTitle": "交错磁1",
+        "enTitle": "Altermagnetism I"
+      },
+      {
+        "zh": "Hubbard模型上的自洽平均场.html",
+        "en": "Hubbard模型上的自洽平均场.en.html",
+        "zhTitle": "Hubbard 模型上的自洽平均场",
+        "enTitle": "Self-Consistent Mean-Field Theory for the Hubbard Model"
+      },
       {
         "zh": "准周期2.html",
         "en": "准周期2.en.html",

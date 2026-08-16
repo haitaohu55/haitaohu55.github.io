@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="{{page_lang}}" data-note-alternate="{{alternate_filename}}">
+<html lang="en" data-note-alternate="band-structure.html">
 <head>
   <meta charset="UTF-8" />
-  <title>{{title}} - Haitao Hu</title>
+  <title>Band Structure Calculation - Haitao Hu</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="Note by Haitao Hu" />
-  <link rel="alternate" hreflang="{{alternate_lang}}" href="{{alternate_filename}}" />
+  <link rel="alternate" hreflang="zh-CN" href="band-structure.html" />
 
   <!-- MathJax 配置 + 引入 -->
   <script>
@@ -176,12 +176,13 @@
       <div class="site-title">Haitao Hu</div>
       <div class="breadcrumbs">
         <a href="../../index.html">Home</a> ·
-        {{breadcrumb}}
+        <a href="index.html">notes on DFT calculations</a> · <span>Band Structure Calculation</span>
       </div>
       <details class="language-menu">
         <summary aria-label="Choose language">Language</summary>
         <div class="language-options">
-          {{language_options}}
+          <a class="language-switch" href="band-structure.html" hreflang="zh-CN">中文</a>
+            <span lang="en" aria-current="page">English</span>
         </div>
       </details>
     </div>
@@ -189,18 +190,60 @@
 
   <main class="note-layout">
     <article class="note-card">
-      <h1>{{title}}</h1>
+      <h1>Band Structure Calculation</h1>
       <div class="note-meta">
-        <span>{{published_label}} <time id="published-date" datetime="{{published_date}}">{{published_date}}</time></span>
+        <span>Published <time id="published-date" datetime="2025-11-16">2025-11-16</time></span>
       </div>
 
       <div class="note-content">
-{{content_html}}
+<h2 id="准备">Preparation</h2>
+<p>First optimize the structure. Then rename the new <code>CONTCAR</code> as <code>POSCAR</code> and place it in the <code>scf</code> folder.</p>
+<h2 id="基本流程">Basic Workflow</h2>
+<p>A band-structure calculation generally uses the optimized <code>POSCAR</code> for an SCF calculation that produces <code>WAVECAR</code> and <code>CHGCAR</code>. The resulting <code>WAVECAR</code> and <code>CHGCAR</code> are then used for the band-structure calculation. The complete workflow therefore has two steps: scf and band.</p>
+<h2 id="两步的-kpoints"><code>KPOINTS</code> for the Two Steps</h2>
+<p>The <code>KPOINTS</code> file for the SCF calculation typically looks like this:</p>
+<pre><code>K-Points
+0
+Gamma
+6 6 1
+0 0 0</code></pre>
+<p>After the scf calculation, the band-structure calculation requires a path through <span class="math inline">\(k\)</span> space. The <code>KPOINTS</code> file looks like this:</p>
+<pre><code>K-Points
+40
+Line-mode
+rec
+0.000 0.000 0.000
+0.500 0.000 0.000
+
+0.500 0.000 0.000
+0.333 0.333 0.000
+
+0.333 0.333 0.000
+0.000 0.500 0.000
+
+0.000 0.500 0.000
+0.000 0.000 0.000</code></pre>
+<h2 id="两步的-incar"><code>INCAR</code> for the Two Steps</h2>
+<p>The main difference between the two <code>INCAR</code> files is:</p>
+<pre><code>ISTART  = 0
+ICHARGE = 2
+# or
+ISTART  = 1
+ICHARGE = 11     </code></pre>
+<p>The files required by the two steps also differ. For the SCF calculation, use:</p>
+<pre><code>LWAVE   = .TRUE.
+LCHARG  = .TRUE.   </code></pre>
+<p>For the band-structure calculation, use:</p>
+<pre><code>LWAVE   = .FALSE.
+LCHARG  = .FALSE. </code></pre>
+<p>All other settings can remain the same.</p>
+<h2 id="生成-band.dat">Generate <code>band.dat</code></h2>
+<p>After the job finishes, use vaspkit - 211 to generate the <code>band.dat</code> file.</p>
       </div>
     </article>
 
-    <aside class="toc" id="note-toc" aria-label="{{contents_label}}">
-      <div class="toc-title">{{contents_label}}</div>
+    <aside class="toc" id="note-toc" aria-label="Contents">
+      <div class="toc-title">Contents</div>
       <ul id="toc-list"></ul>
     </aside>
   </main>

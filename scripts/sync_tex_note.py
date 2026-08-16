@@ -59,6 +59,10 @@ LINK_RE = re.compile(r'<a\s+href="([^"]+)">\s*(.*?)\s*</a>', re.IGNORECASE | re.
 LI_RE = re.compile(r"<li\b([^>]*)>(.*?)</li>", re.IGNORECASE | re.DOTALL)
 TAG_RE = re.compile(r"<[^>]+>")
 UL_RE = re.compile(r"<ul\b[^>]*>.*?</ul>", re.IGNORECASE | re.DOTALL)
+SUMMARY_RE = re.compile(
+    r'(<p\s+class="notes-summary">).*?(</p>)',
+    re.IGNORECASE | re.DOTALL,
+)
 
 
 @dataclass
@@ -238,7 +242,7 @@ def build_archive_block(entries: list[NoteEntry], category: str, language: str =
         excerpt = html.escape(polished_excerpt(target_path))
         published = entry.created[:10]
         published_label = (
-            dt.date.fromisoformat(published).strftime("%-d %B %Y")
+            format_english_date(dt.date.fromisoformat(published))
             if language == "en" else published
         )
         read_label = "Read note →" if language == "en" else "阅读笔记 →"
@@ -315,11 +319,13 @@ def excerpt_from_note(path: Path) -> str:
     for paragraph in parser.paragraphs:
         if "http://" in paragraph or "https://" in paragraph:
             continue
-        before_display_math = re.split(r"\\begin\{", paragraph, maxsplit=1)[0].strip()
-        if len(before_display_math) >= 8:
-            paragraph = before_display_math
+        before_display_math = re.split(
+            r"\\(?:begin\{|\[)", paragraph, maxsplit=1
+        )[0].strip()
+        paragraph = before_display_math
         if len(paragraph) < 8:
             continue
+        paragraph = re.sub(r"\\\((.*?)\\\)", plain_inline_math, paragraph)
         paragraph = re.sub(r"\$([^$]+)\$", plain_inline_math, paragraph)
         paragraph = re.sub(r"\\[A-Za-z]+", "", paragraph)
         paragraph = re.sub(r"[{}]", "", paragraph)
@@ -349,6 +355,12 @@ def polished_excerpt(path: Path) -> str:
             "A one-dimensional nearest-neighbor tight-binding model and its localization properties.",
         "A quasiperiodic model generally refers to a model of the form":
             "An introduction to quasiperiodic models and their standard tight-binding form.",
+        "The electron–phonon coupling matrix element is defined as":
+            "A practical VASP workflow for computing electron–phonon coupling matrix elements and inspecting the resulting HDF5 data.",
+        "Effective mass originates from band curvature.":
+            "Calculating and fitting effective-mass tensors from VASP band curvature data.",
+        "Consider the square-lattice Fermi–Hubbard model with Hamiltonian":
+            "A self-consistent mean-field treatment of the square-lattice Fermi–Hubbard model and its altermagnetic phases.",
         "1. 文件管理 · 2. 查看与搜索文件内容 · 3. 简单编辑：vim / vi":
             "文件管理、文件内容的查看与搜索，以及 vim / vi 的基础编辑操作。",
         "1. 有限差分法离散化哈密顿量":
@@ -361,6 +373,12 @@ def polished_excerpt(path: Path) -> str:
             "考虑一维最近邻紧束缚模型，并讨论它的局域化性质。",
         "准周期模型一般指形式如下的模型":
             "介绍准周期模型及其常见的紧束缚表达形式。",
+        "电声耦合矩阵元定义为":
+            "使用 VASP 计算电声耦合矩阵元，并读取所得 HDF5 数据的实用流程。",
+        "有效质量来于能带的弯曲":
+            "从能带曲率出发，介绍有效质量张量的 VASP 计算与拟合流程。",
+        "考虑方格子 Fermi-Hubbard 模型，其哈密顿量":
+            "方格子 Fermi–Hubbard 模型的自洽平均场处理及其交错磁相。",
     }
     return replacements.get(excerpt, excerpt)
 
@@ -391,7 +409,7 @@ def build_overview_block(language: str = "en") -> str:
             href = html.escape(note_path.relative_to(ROOT).as_posix(), quote=True)
             excerpt = html.escape(polished_excerpt(note_path))
             published = entry.created[:10]
-            published_label = dt.date.fromisoformat(published).strftime("%-d %B %Y") if language == "en" else published
+            published_label = format_english_date(dt.date.fromisoformat(published)) if language == "en" else published
             read_label = "Read note →" if language == "en" else "阅读笔记 →"
             lines.extend(
                 [
@@ -415,6 +433,43 @@ def build_overview_block(language: str = "en") -> str:
     return "\n".join(lines)
 
 
+def format_english_date(value: dt.date) -> str:
+    return f"{value.day} {value.strftime('%B %Y')}"
+
+
+def build_category_summary(entries: list[NoteEntry], language: str = "en") -> str:
+    if not entries:
+        raise RuntimeError("无法为笔记分类生成空目录摘要。")
+    latest = max(dt.date.fromisoformat(entry.created[:10]) for entry in entries)
+    total = len(entries)
+    if language == "en":
+        note_label = "note" if total == 1 else "notes"
+        return f"{total} {note_label} · Most recent {format_english_date(latest)}"
+    return f"{total} 篇笔记 · 最近更新于 {latest.isoformat()}"
+
+
+def build_notes_summary(language: str = "en") -> str:
+    entries = [
+        entry
+        for category in CATEGORY_CONFIG
+        for entry in read_category_entries(category)
+    ]
+    if not entries:
+        raise RuntimeError("无法为笔记总览生成空目录摘要。")
+
+    total = len(entries)
+    category_total = len(CATEGORY_CONFIG)
+    latest = max(dt.date.fromisoformat(entry.created[:10]) for entry in entries)
+    if language == "en":
+        note_label = "note" if total == 1 else "notes"
+        category_label = "collection" if category_total == 1 else "collections"
+        return (
+            f"{total} {note_label} · {category_total} {category_label} · "
+            f"Updated {format_english_date(latest)}"
+        )
+    return f"{total} 篇笔记 · {category_total} 个分类 · 最近更新于 {latest.isoformat()}"
+
+
 def update_notes_overview() -> list[Path]:
     marker_pattern = re.compile(
         re.escape(OVERVIEW_START_MARKER)
@@ -429,7 +484,18 @@ def update_notes_overview() -> list[Path]:
         source = path.read_text(encoding="utf-8")
         if not marker_pattern.search(source):
             raise RuntimeError(f"笔记总览未找到受管预览区块标记：{path}")
-        path.write_text(marker_pattern.sub(build_overview_block(language), source, count=1), encoding="utf-8")
+        if not SUMMARY_RE.search(source):
+            raise RuntimeError(f"笔记总览未找到摘要元数据：{path}")
+        summary = html.escape(build_notes_summary(language))
+        source = SUMMARY_RE.sub(
+            lambda match: f"{match.group(1)}{summary}{match.group(2)}",
+            source,
+            count=1,
+        )
+        path.write_text(
+            marker_pattern.sub(build_overview_block(language), source, count=1),
+            encoding="utf-8",
+        )
         updated_paths.append(path)
     return updated_paths
 
@@ -610,6 +676,15 @@ def sanitize_tex_for_pandoc(raw_tex: str) -> str:
     return "\n".join(kept_lines).strip()
 
 
+def normalize_pandoc_math(content_html: str) -> str:
+    nested_display = re.compile(
+        r"\\\[\s*(\\begin\{(?P<environment>equation\*?|align\*?)\}.*?"
+        r"\\end\{(?P=environment)\})\s*\\\]",
+        re.DOTALL,
+    )
+    return nested_display.sub(lambda match: match.group(1), content_html)
+
+
 def convert_tex_to_html(source: Path) -> str:
     cmd = [
         "pandoc",
@@ -622,7 +697,7 @@ def convert_tex_to_html(source: Path) -> str:
     ]
     code, html_output, stderr_output = run_pandoc(cmd)
     if code == 0 and html_output:
-        return html_output
+        return normalize_pandoc_math(html_output)
 
     # 对带有复杂导言区/CJK环境的 LaTeX 笔记做一次清洗后重试
     raw_tex = source.read_text(encoding="utf-8", errors="ignore")
@@ -652,7 +727,7 @@ def convert_tex_to_html(source: Path) -> str:
         raise RuntimeError(
             "pandoc 原始输出为空，且清洗后重试仍为空。"
         )
-    return fallback_html
+    return normalize_pandoc_math(fallback_html)
 
 
 def write_note_page(category: str, filename: str, page_html: str) -> Path:
@@ -687,10 +762,26 @@ def update_index(category: str, slug: str, title: str, created_iso: str) -> Path
     )
     new_block = build_archive_block(sorted_entries, category, "en")
     updated = replace_managed_block(working, new_block)
+    if not SUMMARY_RE.search(updated):
+        raise RuntimeError(f"分类索引未找到摘要元数据：{index_path}")
+    english_summary = html.escape(build_category_summary(sorted_entries, "en"))
+    updated = SUMMARY_RE.sub(
+        lambda match: f"{match.group(1)}{english_summary}{match.group(2)}",
+        updated,
+        count=1,
+    )
     index_path.write_text(updated, encoding="utf-8")
     zh_index_path = config["zh_index_path"]
     zh_source = zh_index_path.read_text(encoding="utf-8")
     zh_updated = replace_managed_block(zh_source, build_archive_block(sorted_entries, category, "zh-CN"))
+    if not SUMMARY_RE.search(zh_updated):
+        raise RuntimeError(f"分类索引未找到摘要元数据：{zh_index_path}")
+    chinese_summary = html.escape(build_category_summary(sorted_entries, "zh-CN"))
+    zh_updated = SUMMARY_RE.sub(
+        lambda match: f"{match.group(1)}{chinese_summary}{match.group(2)}",
+        zh_updated,
+        count=1,
+    )
     zh_index_path.write_text(zh_updated, encoding="utf-8")
     return index_path
 
@@ -721,7 +812,7 @@ def main() -> int:
             f"<span>{html.escape(args.title)}</span>"
         )
         translation_breadcrumb = (
-            f'<a href="index.zh.html">{html.escape(config["label"])}</a> · '
+            f'<a href="{config["index_href"]}">{html.escape(config["label"])}</a> · '
             f"<span>{html.escape(args.translation_title)}</span>"
         )
         now = dt.datetime.now().astimezone()

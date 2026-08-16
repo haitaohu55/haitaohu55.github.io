@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="{{page_lang}}" data-note-alternate="{{alternate_filename}}">
+<html lang="zh-CN" data-note-alternate="band-structure.en.html">
 <head>
   <meta charset="UTF-8" />
-  <title>{{title}} - Haitao Hu</title>
+  <title>能带计算 - Haitao Hu</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="Note by Haitao Hu" />
-  <link rel="alternate" hreflang="{{alternate_lang}}" href="{{alternate_filename}}" />
+  <link rel="alternate" hreflang="en" href="band-structure.en.html" />
 
   <!-- MathJax 配置 + 引入 -->
   <script>
@@ -176,12 +176,13 @@
       <div class="site-title">Haitao Hu</div>
       <div class="breadcrumbs">
         <a href="../../index.html">Home</a> ·
-        {{breadcrumb}}
+        <a href="index.html">notes on DFT calculations</a> · <span>能带计算</span>
       </div>
       <details class="language-menu">
-        <summary aria-label="Choose language">Language</summary>
+        <summary aria-label="选择语言">Language</summary>
         <div class="language-options">
-          {{language_options}}
+          <span lang="zh-CN" aria-current="page">中文</span>
+            <a class="language-switch" href="band-structure.en.html" hreflang="en">English</a>
         </div>
       </details>
     </div>
@@ -189,18 +190,60 @@
 
   <main class="note-layout">
     <article class="note-card">
-      <h1>{{title}}</h1>
+      <h1>能带计算</h1>
       <div class="note-meta">
-        <span>{{published_label}} <time id="published-date" datetime="{{published_date}}">{{published_date}}</time></span>
+        <span>发布于 <time id="published-date" datetime="2025-11-16">2025-11-16</time></span>
       </div>
 
       <div class="note-content">
-{{content_html}}
+<h2 id="准备">准备</h2>
+<p>首先做结构优化，然后把新的 <code>CONTCAR</code> 命名为 <code>POSCAR</code>，放进文件夹 <code>scf</code> 中。</p>
+<h2 id="基本流程">基本流程</h2>
+<p>一般算能带就是用结构优化后的 <code>POSCAR</code> 做一步自洽得到 <code>WAVECAR</code> 和 <code>CHGCAR</code>，然后用自洽得到的 <code>WAVECAR</code> 和 <code>CHGCAR</code> 跑能带计算。所以整个流程分两步：scf 和 band。</p>
+<h2 id="两步的-kpoints">两步的 <code>KPOINTS</code></h2>
+<p>自洽的 <code>KPOINTS</code>一般长这样</p>
+<pre><code>K-Points
+0
+Gamma
+6 6 1
+0 0 0</code></pre>
+<p>scf 完要算能带就需要给一条 <span class="math inline">\(k\)</span> 空间的路径，<code>KPOINTS</code> 长这样</p>
+<pre><code>K-Points
+40
+Line-mode
+rec
+0.000 0.000 0.000
+0.500 0.000 0.000
+
+0.500 0.000 0.000
+0.333 0.333 0.000
+
+0.333 0.333 0.000
+0.000 0.500 0.000
+
+0.000 0.500 0.000
+0.000 0.000 0.000</code></pre>
+<h2 id="两步的-incar">两步的 <code>INCAR</code></h2>
+<p>两步的 <code>INCAR</code> 文件区别主要在</p>
+<pre><code>ISTART  = 0
+ICHARGE = 2
+# or
+ISTART  = 1
+ICHARGE = 11     </code></pre>
+<p>以及他们需要什么文件上。对于自洽可以用</p>
+<pre><code>LWAVE   = .TRUE.
+LCHARG  = .TRUE.   </code></pre>
+<p>对于能带可以用</p>
+<pre><code>LWAVE   = .FALSE.
+LCHARG  = .FALSE. </code></pre>
+<p>其他保持一致就可以了。</p>
+<h2 id="生成-band.dat">生成 <code>band.dat</code></h2>
+<p>提交完任务后，用 vaspkit - 211 就能生成 <code>band.dat</code> 文件。</p>
       </div>
     </article>
 
-    <aside class="toc" id="note-toc" aria-label="{{contents_label}}">
-      <div class="toc-title">{{contents_label}}</div>
+    <aside class="toc" id="note-toc" aria-label="目录">
+      <div class="toc-title">目录</div>
       <ul id="toc-list"></ul>
     </aside>
   </main>

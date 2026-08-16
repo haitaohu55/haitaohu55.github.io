@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import datetime as dt
 import re
 from collections import Counter
 from html.parser import HTMLParser
@@ -81,6 +82,9 @@ NOTES_DIRECTORY_PAIRS = {
     Path("notes/other/index.html"): Path("notes/other/index.zh.html"),
 }
 NOTE_PAIRS = {
+    Path("notes/dft/band-structure.html"): (Path("notes/dft/band-structure.en.html"), "zh-CN", "en", "2025-11-16"),
+    Path("notes/dft/effective-mass.html"): (Path("notes/dft/effective-mass.en.html"), "zh-CN", "en", "2026-06-04"),
+    Path("notes/dft/electron-phonon-coupling.html"): (Path("notes/dft/electron-phonon-coupling.en.html"), "zh-CN", "en", "2026-06-05"),
     Path("notes/dft/linux.html"): (Path("notes/dft/linux.en.html"), "zh-CN", "en", "2025-12-25"),
     Path("notes/dft/opt.html"): (Path("notes/dft/opt.zh.html"), "en", "zh-CN", "2025-12-20"),
     Path("notes/dft/phonon-spectrum.html"): (Path("notes/dft/phonon-spectrum.en.html"), "zh-CN", "en", "2026-05-17"),
@@ -89,6 +93,8 @@ NOTE_PAIRS = {
     Path("notes/tb/准周期1.html"): (Path("notes/tb/准周期1.en.html"), "zh-CN", "en", "2025-12-25"),
     Path("notes/tb/准周期2.html"): (Path("notes/tb/准周期2.en.html"), "zh-CN", "en", "2026-08-10"),
     Path("notes/tb/精确对角化.html"): (Path("notes/tb/精确对角化.en.html"), "zh-CN", "en", "2025-12-23"),
+    Path("notes/tb/Hubbard模型上的自洽平均场.html"): (Path("notes/tb/Hubbard模型上的自洽平均场.en.html"), "zh-CN", "en", "2026-08-16"),
+    Path("notes/tb/交错磁1.html"): (Path("notes/tb/交错磁1.en.html"), "zh-CN", "en", "2026-08-16"),
     Path("notes/other/git.html"): (Path("notes/other/git.en.html"), "zh-CN", "en", "2026-03-05"),
 }
 NOTE_SCRIPT_SRC = "../../assets/note-page.js"
@@ -389,6 +395,27 @@ def math_blocks(source: str) -> list[str]:
     return display + doubles + inline
 
 
+def without_code_examples(source: str) -> str:
+    return re.sub(
+        r"<pre\b[^>]*>.*?</pre>|<code\b[^>]*>.*?</code>",
+        "",
+        source,
+        flags=re.IGNORECASE | re.DOTALL,
+    )
+
+
+def notes_summary(path: Path) -> str:
+    source = path.read_text(encoding="utf-8")
+    match = re.search(
+        r'<p\s+class="notes-summary">(.*?)</p>',
+        source,
+        flags=re.IGNORECASE | re.DOTALL,
+    )
+    if not match:
+        return ""
+    return " ".join(re.sub(r"<[^>]+>", "", match.group(1)).split())
+
+
 def main() -> int:
     failures: list[str] = []
 
@@ -446,6 +473,55 @@ def main() -> int:
 
     notes = parse(ROOT / "notes.html")
     notes_text = " ".join(notes.all_text)
+    latest_note_date = max(pair[3] for pair in NOTE_PAIRS.values())
+    latest_note = dt.date.fromisoformat(latest_note_date)
+    latest_note_label = f"{latest_note.day} {latest_note.strftime('%B %Y')}"
+    expected_notes_summary = (
+        f"{len(NOTE_PAIRS)} notes · {len(NOTES_CATEGORIES)} collections · "
+        f"Updated {latest_note_label}"
+    )
+    expected_notes_summary_zh = (
+        f"{len(NOTE_PAIRS)} 篇笔记 · {len(NOTES_CATEGORIES)} 个分类 · "
+        f"最近更新于 {latest_note_date}"
+    )
+    if notes_summary(ROOT / "notes.html") != expected_notes_summary:
+        failures.append(
+            f"英文 Notes 摘要应为 {expected_notes_summary}，"
+            f"实际为 {notes_summary(ROOT / 'notes.html')}"
+        )
+    if notes_summary(ROOT / "notes.zh.html") != expected_notes_summary_zh:
+        failures.append(
+            f"中文 Notes 摘要应为 {expected_notes_summary_zh}，"
+            f"实际为 {notes_summary(ROOT / 'notes.zh.html')}"
+        )
+    for category_index in NOTES_CATEGORIES.values():
+        category_dates = [
+            pair[3]
+            for original, pair in NOTE_PAIRS.items()
+            if original.parent == category_index.parent
+        ]
+        latest_category_date = max(category_dates)
+        latest_category = dt.date.fromisoformat(latest_category_date)
+        category_total = len(category_dates)
+        expected_category_summary = (
+            f"{category_total} {'note' if category_total == 1 else 'notes'} · "
+            f"Most recent {latest_category.day} {latest_category.strftime('%B %Y')}"
+        )
+        expected_category_summary_zh = (
+            f"{category_total} 篇笔记 · 最近更新于 {latest_category_date}"
+        )
+        chinese_category_index = category_index.with_name("index.zh.html")
+        if notes_summary(ROOT / category_index) != expected_category_summary:
+            failures.append(
+                f"Notes 分类摘要应为 {expected_category_summary}，"
+                f"实际为 {notes_summary(ROOT / category_index)}：{category_index}"
+            )
+        if notes_summary(ROOT / chinese_category_index) != expected_category_summary_zh:
+            failures.append(
+                f"中文 Notes 分类摘要应为 {expected_category_summary_zh}，"
+                f"实际为 {notes_summary(ROOT / chinese_category_index)}："
+                f"{chinese_category_index}"
+            )
     home_source = (ROOT / "index.html").read_text(encoding="utf-8")
     for description in SHORT_NOTE_DESCRIPTIONS:
         if description in home_text or description in notes_text:
@@ -517,11 +593,19 @@ def main() -> int:
             (english, english_relative, "English"),
             (chinese, chinese_relative, "中文"),
         ):
+            directory_source = (ROOT / relative).read_text(encoding="utf-8")
             page_text = " ".join(page.all_text)
             if "Language" not in page_text or label not in page_text:
                 failures.append(f"Notes 双语目录缺少语言菜单：{english_relative}")
-            if "notes-excerpt" not in (ROOT / relative).read_text(encoding="utf-8"):
+            if "notes-excerpt" not in directory_source:
                 failures.append(f"Notes 双语目录缺少笔记简介：{english_relative}")
+            excerpts = re.findall(
+                r'<p\s+class="notes-excerpt">(.*?)</p>',
+                directory_source,
+                flags=re.IGNORECASE | re.DOTALL,
+            )
+            if any(re.search(r"\\(?:\(|\[)", excerpt) for excerpt in excerpts):
+                failures.append(f"Notes 目录摘要仍包含未渲染的数学定界符：{relative}")
 
     sync_script = ROOT / "scripts" / "sync_tex_note.py"
     if not sync_script.is_file():
@@ -574,6 +658,7 @@ def main() -> int:
             (translated_relative, translated),
         ):
             page_source = (ROOT / relative).read_text(encoding="utf-8")
+            reference_source = without_code_examples(page_source)
             if page.time_values != [
                 ({"id": "published-date", "datetime": published}, published)
             ]:
@@ -594,6 +679,14 @@ def main() -> int:
                 failures.append(f"语言菜单未放在顶部导航：{relative}")
             if 'class="language-menu"' in article_source:
                 failures.append(f"正文标题旁仍残留语言菜单：{relative}")
+            if re.search(r'<span\s+class="citation"[^>]*>\s*</span>', reference_source):
+                failures.append(f"笔记仍包含空的 Pandoc 文献引用：{relative}")
+            if re.search(r"\[(?:eq|fig|tab):[^\]]+\]", reference_source):
+                failures.append(f"笔记仍包含未解析的交叉引用：{relative}")
+            if re.search(
+                r"\\\[\s*\\begin\{(?:equation\*?|align\*?)\}", reference_source
+            ):
+                failures.append(f"笔记仍包含重复嵌套的展示公式环境：{relative}")
 
         if original.h2_ids != translated.h2_ids:
             failures.append(f"双语笔记章节锚点不一致：{original_relative}")

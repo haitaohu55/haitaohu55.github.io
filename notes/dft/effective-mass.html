@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="{{page_lang}}" data-note-alternate="{{alternate_filename}}">
+<html lang="zh-CN" data-note-alternate="effective-mass.en.html">
 <head>
   <meta charset="UTF-8" />
-  <title>{{title}} - Haitao Hu</title>
+  <title>有效质量计算 - Haitao Hu</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="Note by Haitao Hu" />
-  <link rel="alternate" hreflang="{{alternate_lang}}" href="{{alternate_filename}}" />
+  <link rel="alternate" hreflang="en" href="effective-mass.en.html" />
 
   <!-- MathJax 配置 + 引入 -->
   <script>
@@ -176,12 +176,13 @@
       <div class="site-title">Haitao Hu</div>
       <div class="breadcrumbs">
         <a href="../../index.html">Home</a> ·
-        {{breadcrumb}}
+        <a href="index.html">notes on DFT calculations</a> · <span>有效质量计算</span>
       </div>
       <details class="language-menu">
-        <summary aria-label="Choose language">Language</summary>
+        <summary aria-label="选择语言">Language</summary>
         <div class="language-options">
-          {{language_options}}
+          <span lang="zh-CN" aria-current="page">中文</span>
+            <a class="language-switch" href="effective-mass.en.html" hreflang="en">English</a>
         </div>
       </details>
     </div>
@@ -189,18 +190,61 @@
 
   <main class="note-layout">
     <article class="note-card">
-      <h1>{{title}}</h1>
+      <h1>有效质量计算</h1>
       <div class="note-meta">
-        <span>{{published_label}} <time id="published-date" datetime="{{published_date}}">{{published_date}}</time></span>
+        <span>发布于 <time id="published-date" datetime="2026-06-04">2026-06-04</time></span>
       </div>
 
       <div class="note-content">
-{{content_html}}
+<h2 id="定义">定义</h2>
+<p>有效质量来于能带的弯曲 <span class="math display">\[
+\frac{1}{m^*}=\frac{1}{\hbar^2}\frac{\partial^2 E}{\partial k^2}.
+\]</span> 有效质量是一个张量，沿不同方向的电场会有不同的有效质量 <span class="math display">\[
+\frac{1}{m^*_{ij}}=\frac{1}{\hbar^2}\frac{\partial^2 E}{\partial k_i \partial k_j}.
+\]</span></p>
+<h2 id="计算流程">计算流程</h2>
+<p>第一步做 SCF，得到收敛的 <code>CHGCAR</code> 和 <code>WAVECAR</code>，然后用 vaspkit-911 找 CBM 和 VBM 的 <span class="math inline">\(k\)</span> 点位置。 第二步在 CBM 和 VBM 附近取 <span class="math inline">\(k\)</span> 点用收敛的 <code>CHGCAR</code> 做 NSCF，得到 <code>EIGENVAL</code>。 第三步用拟合脚本从 <code>EIGENVAL</code> 拟合有效质量张量。</p>
+<h2 id="scf">SCF</h2>
+<p>先在 <code>2_scf/</code> 做 SCF，得到收敛的 <code>CHGCAR</code>。SCF 关键 <code>INCAR</code> 如下</p>
+<pre><code>ISTART  = 0
+ICHARG = 2
+LWAVE   = .TRUE.
+LCHARG  = .TRUE.</code></pre>
+<h2 id="nscf">NSCF</h2>
+<p>然后在 <code>4_nscf/</code> 做固定电荷密度 NSCF，只在 CBM 和 VBM 附近的 k 点上求本征值。NSCF 关键 <code>INCAR</code> 如下</p>
+<pre><code>ISTART  = 1
+ICHARG = 11
+LWAVE   = .FALSE.
+LCHARG  = .FALSE.
+ISYM   = 0</code></pre>
+<p>NSCF 的 <code>KPOINTS</code> 需要在 VBM/CBM 附近，可以用脚本生成</p>
+<pre><code>python generate_kpoints.py \
+  --poscar POSCAR \
+  --h 0.01 \
+  --cbm 0 0 0 \
+  --vbm 0.4651 0.5 0 \
+  --out KPOINTS_test</code></pre>
+<p>这会生成：</p>
+<ul>
+<li><p><code>KPOINTS_test</code>：54 个 VBM 和 CBM 附近的 <span class="math inline">\(k\)</span> 点。</p></li>
+<li><p><code>KPOINTS_test.json</code> ：记录每一个 <span class="math inline">\(k\)</span> 点怎么算的。</p></li>
+</ul>
+<p>把 <code>KPOINTS_test</code> 重命名为 <code>KPOINTS</code> 就行。</p>
+<h2 id="拟合有效质量">拟合有效质量</h2>
+<p>基于上一步得到的 <code>EIGENVAL</code> 和 <code>json</code> 文件拟合有效质量</p>
+<pre><code>python fit_effective_mass.py \
+  --eigenval EIGENVAL \
+  --metadata KPOINTS_test.json \
+  --cband 57 \
+  --vband 56 \
+  --poscar POSCAR \
+  --field-direct 1 0 0</code></pre>
+<p>这里要指定 CBM 和 VBM 的 band index。 最后的 <code>--field-direct</code> 是你要沿着哪个方向算约化有效质量，实空间晶格矢量为基底。 最后在终端就会直接显示有效质量。</p>
       </div>
     </article>
 
-    <aside class="toc" id="note-toc" aria-label="{{contents_label}}">
-      <div class="toc-title">{{contents_label}}</div>
+    <aside class="toc" id="note-toc" aria-label="目录">
+      <div class="toc-title">目录</div>
       <ul id="toc-list"></ul>
     </aside>
   </main>
